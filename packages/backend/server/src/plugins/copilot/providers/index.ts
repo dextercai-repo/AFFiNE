@@ -18,4 +18,5 @@ export { FalProvider } from './fal';
 export { GeminiProvider } from './gemini';
 export { OpenAIProvider } from './openai';
 export { PerplexityProvider } from './perplexity';
+export type { CopilotProvider } from './provider';
 export * from './types';

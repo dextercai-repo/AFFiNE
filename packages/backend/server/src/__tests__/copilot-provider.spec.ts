@@ -342,7 +342,7 @@ const actions = [
         TranscriptionResponseSchema.parse(JSON.parse(result));
       });
     },
-    type: 'text' as const,
+    type: 'structured' as const,
   },
   {
     name: 'Should transcribe middle audio',
@@ -364,7 +364,7 @@ const actions = [
         TranscriptionResponseSchema.parse(JSON.parse(result));
       });
     },
-    type: 'text' as const,
+    type: 'structured' as const,
   },
   {
     name: 'Should transcribe long audio',
@@ -386,7 +386,7 @@ const actions = [
         TranscriptionResponseSchema.parse(JSON.parse(result));
       });
     },
-    type: 'text' as const,
+    type: 'structured' as const,
   },
   {
     promptName: [
@@ -564,43 +564,71 @@ for (const { name, promptName, messages, verifier, type, config } of actions) {
         const provider = (await factory.getProviderByModel(prompt.model))!;
         t.truthy(provider, 'should have provider');
         await retry(`action: ${promptName}`, t, async t => {
-          if (type === 'text' && 'generateText' in provider) {
-            const result = await provider.generateText(
-              [
-                ...prompt.finish(
-                  messages.reduce(
-                    // @ts-expect-error
-                    (acc, m) => Object.assign(acc, m.params),
-                    {}
-                  )
-                ),
-                ...messages,
-              ],
-              prompt.model,
-              Object.assign({}, prompt.config, config)
-            );
-            t.truthy(result, 'should return result');
-            verifier?.(t, result);
-          } else if (type === 'image' && 'generateImages' in provider) {
-            const result = await provider.generateImages(
-              [
-                ...prompt.finish(
-                  messages.reduce(
-                    // @ts-expect-error
-                    (acc, m) => Object.assign(acc, m.params),
-                    {}
-                  )
-                ),
-                ...messages,
-              ],
-              prompt.model
-            );
-            t.truthy(result.length, 'should return result');
-            for (const r of result) {
-              verifier?.(t, r);
+          switch (type) {
+            case 'text': {
+              const result = await provider.text(
+                { modelId: prompt.model },
+                [
+                  ...prompt.finish(
+                    messages.reduce(
+                      // @ts-expect-error
+                      (acc, m) => Object.assign(acc, m.params),
+                      {}
+                    )
+                  ),
+                  ...messages,
+                ],
+                Object.assign({}, prompt.config, config)
+              );
+              t.truthy(result, 'should return result');
+              verifier?.(t, result);
+              break;
             }
-          } else {
-            t.fail('unsupported provider type');
+            case 'structured': {
+              const result = await provider.structure(
+                { modelId: prompt.model },
+                [
+                  ...prompt.finish(
+                    messages.reduce(
+                      (acc, m) => Object.assign(acc, m.params),
+                      {}
+                    )
+                  ),
+                  ...messages,
+                ],
+                Object.assign({}, prompt.config, config)
+              );
+              t.truthy(result, 'should return result');
+              verifier?.(t, result);
+              break;
+            }
+            case 'image': {
+              const stream = provider.streamImages({ modelId: prompt.model }, [
+                ...prompt.finish(
+                  messages.reduce(
+                    // @ts-expect-error
+                    (acc, m) => Object.assign(acc, m.params),
+                    {}
+                  )
+                ),
+                ...messages,
+              ]);
+
+              const result = [];
+              for await (const attachment of stream) {
+                result.push(attachment);
+              }
+
+              t.truthy(result.length, 'should return result');
+              for (const r of result) {
+                verifier?.(t, r);
+              }
+              break;
+            }
+            default: {
+              t.fail('unsupported provider type');
+              break;
+            }
           }
         });
       }

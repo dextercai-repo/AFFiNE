@@ -5,6 +5,7 @@ import {
   ImagePart,
   TextPart,
 } from 'ai';
+import { ZodType } from 'zod';
 
 import { PromptMessage } from './types';
 
@@ -61,9 +62,12 @@ export async function chatToGPTMessage(
   messages: PromptMessage[],
   // TODO(@darkskygit): move this logic in interface refactoring
   withAttachment: boolean = true
-): Promise<[string | undefined, ChatMessage[], any]> {
+): Promise<[string | undefined, ChatMessage[], ZodType?]> {
   const system = messages[0]?.role === 'system' ? messages.shift() : undefined;
-  const schema = system?.params?.schema;
+  const schema =
+    system?.params?.schema && system.params.schema instanceof ZodType
+      ? system.params.schema
+      : undefined;
 
   // filter redundant fields
   const msgs: ChatMessage[] = [];

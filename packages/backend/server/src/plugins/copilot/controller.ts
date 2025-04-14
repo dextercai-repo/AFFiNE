@@ -46,9 +46,10 @@ import {
 } from '../../base';
 import { CurrentUser, Public } from '../../core/auth';
 import {
-  CopilotCapability,
+  CopilotProvider,
   CopilotProviderFactory,
-  CopilotTextProvider,
+  ModelInputType,
+  ModelOutputType,
 } from './providers';
 import { ChatSession, ChatSessionService } from './session';
 import { CopilotStorage } from './storage';
@@ -125,22 +126,23 @@ export class CopilotController implements BeforeApplicationShutdown {
     sessionId: string,
     messageId?: string,
     modelId?: string
-  ): Promise<{ provider: CopilotTextProvider; model: string }> {
+  ): Promise<{ provider: CopilotProvider; model: string }> {
     const { hasAttachment, model } = await this.checkRequest(
       userId,
       sessionId,
       messageId,
       modelId
     );
-
-    let provider = await this.provider.getProviderByCapability(
-      CopilotCapability.TextToText,
+    let provider = await this.provider.getProviderByOutputType(
+      ModelOutputType.Text,
+      hasAttachment ? ModelInputType.Image : ModelInputType.Text,
       { model }
     );
-    // fallback to image to text if text to text is not available
-    if (!provider && hasAttachment) {
-      provider = await this.provider.getProviderByCapability(
-        CopilotCapability.ImageToText,
+    // fallback to text to text if image to text is not available
+    if (!provider && !hasAttachment) {
+      provider = await this.provider.getProviderByOutputType(
+        ModelOutputType.Text,
+        ModelInputType.Text,
         { model }
       );
     }
@@ -202,7 +204,7 @@ export class CopilotController implements BeforeApplicationShutdown {
     delete params.webSearch;
     delete params.modelId;
 
-    return { messageId, retry, reasoning, webSearch, modelId, params };
+    return { messageId, retry, reasoning, webSearch, modelId };
   }
 
   private getSignal(req: Request) {
@@ -279,7 +281,7 @@ export class CopilotController implements BeforeApplicationShutdown {
       const finalMessage = session.finish(params);
       info.finalMessage = finalMessage.filter(m => m.role !== 'system');
 
-      const content = await provider.generateText(finalMessage, model, {
+      const content = await provider.text({ modelId: model }, finalMessage, {
         ...session.config.promptConfig,
         signal: this.getSignal(req),
         user: user.id,
@@ -348,7 +350,7 @@ export class CopilotController implements BeforeApplicationShutdown {
       info.finalMessage = finalMessage.filter(m => m.role !== 'system');
 
       const source$ = from(
-        provider.generateTextStream(finalMessage, model, {
+        provider.streamText({ modelId: model }, finalMessage, {
           ...session.config.promptConfig,
           signal: this.getSignal(req),
           user: user.id,
@@ -511,10 +513,9 @@ export class CopilotController implements BeforeApplicationShutdown {
         sessionId,
         messageId
       );
-      const provider = await this.provider.getProviderByCapability(
-        hasAttachment
-          ? CopilotCapability.ImageToImage
-          : CopilotCapability.TextToImage,
+      const provider = await this.provider.getProviderByOutputType(
+        ModelOutputType.Image,
+        hasAttachment ? ModelInputType.Image : ModelInputType.Text,
         { model }
       );
       if (!provider) {
@@ -544,13 +545,22 @@ export class CopilotController implements BeforeApplicationShutdown {
       );
       this.ongoingStreamCount$.next(this.ongoingStreamCount$.value + 1);
       const source$ = from(
-        provider.generateImagesStream(session.finish(params), session.model, {
-          ...session.config.promptConfig,
-          quality: params.quality || undefined,
-          seed: this.parseNumber(params.seed),
-          signal: this.getSignal(req),
-          user: user.id,
-        })
+        provider.streamImages(
+          {
+            modelId: session.model,
+            inputType: hasAttachment
+              ? ModelInputType.Image
+              : ModelInputType.Text,
+          },
+          session.finish(params),
+          {
+            ...session.config.promptConfig,
+            quality: params.quality || undefined,
+            seed: this.parseNumber(params.seed),
+            signal: this.getSignal(req),
+            user: user.id,
+          }
+        )
       ).pipe(
         mergeMap(handleRemoteLink),
         connect(shared$ =>

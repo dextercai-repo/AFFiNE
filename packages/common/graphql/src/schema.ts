@@ -405,6 +405,12 @@ export interface CopilotPromptType {
   name: Scalars['String']['output'];
 }
 
+export interface CopilotProviderNotSupportedDataType {
+  __typename?: 'CopilotProviderNotSupportedDataType';
+  kind: Scalars['String']['output'];
+  provider: Scalars['String']['output'];
+}
+
 export interface CopilotProviderSideErrorDataType {
   __typename?: 'CopilotProviderSideErrorDataType';
   kind: Scalars['String']['output'];
@@ -650,6 +656,7 @@ export type ErrorDataUnion =
   | CopilotInvalidContextDataType
   | CopilotMessageNotFoundDataType
   | CopilotPromptNotFoundDataType
+  | CopilotProviderNotSupportedDataType
   | CopilotProviderSideErrorDataType
   | DocActionDeniedDataType
   | DocHistoryNotFoundDataType
@@ -723,6 +730,7 @@ export enum ErrorNames {
   COPILOT_MESSAGE_NOT_FOUND = 'COPILOT_MESSAGE_NOT_FOUND',
   COPILOT_PROMPT_INVALID = 'COPILOT_PROMPT_INVALID',
   COPILOT_PROMPT_NOT_FOUND = 'COPILOT_PROMPT_NOT_FOUND',
+  COPILOT_PROVIDER_NOT_SUPPORTED = 'COPILOT_PROVIDER_NOT_SUPPORTED',
   COPILOT_PROVIDER_SIDE_ERROR = 'COPILOT_PROVIDER_SIDE_ERROR',
   COPILOT_QUOTA_EXCEEDED = 'COPILOT_QUOTA_EXCEEDED',
   COPILOT_SESSION_DELETED = 'COPILOT_SESSION_DELETED',

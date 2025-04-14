@@ -685,6 +685,12 @@ export const USER_FRIENDLY_ERRORS = {
     type: 'invalid_input',
     message: `Copilot prompt is invalid.`,
   },
+  copilot_provider_not_supported: {
+    type: 'invalid_input',
+    args: { provider: 'string', kind: 'string' },
+    message: ({ provider, kind }) =>
+      `Copilot provider ${provider} is not supported output type ${kind}`,
+  },
   copilot_provider_side_error: {
     type: 'internal_server_error',
     args: { provider: 'string', kind: 'string', message: 'string' },

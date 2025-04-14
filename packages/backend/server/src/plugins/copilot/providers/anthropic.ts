@@ -13,13 +13,17 @@ import {
 } from '../../../base';
 import { createExaCrawlTool, createExaSearchTool } from '../tools';
 import { CopilotProvider } from './provider';
+import type {
+  CopilotChatOptions,
+  ModelConditions,
+  ModelFullConditions,
+  PromptMessage,
+} from './types';
 import {
   ChatMessageRole,
-  CopilotCapability,
-  CopilotChatOptions,
   CopilotProviderType,
-  CopilotTextToTextProvider,
-  PromptMessage,
+  ModelInputType,
+  ModelOutputType,
 } from './types';
 import { chatToGPTMessage } from './utils';
 
@@ -28,15 +32,28 @@ export type AnthropicConfig = {
   baseUrl?: string;
 };
 
-export class AnthropicProvider
-  extends CopilotProvider<AnthropicConfig>
-  implements CopilotTextToTextProvider
-{
+export class AnthropicProvider extends CopilotProvider<AnthropicConfig> {
   override readonly type = CopilotProviderType.Anthropic;
-  override readonly capabilities = [CopilotCapability.TextToText];
   override readonly models = [
-    'claude-3-7-sonnet-20250219',
-    'claude-3-5-sonnet-20241022',
+    {
+      id: 'claude-3-7-sonnet-20250219',
+      capabilities: [
+        {
+          input: [ModelInputType.Text],
+          output: [ModelOutputType.Text, ModelOutputType.Reasoning],
+          defaultForOutputType: true,
+        },
+      ],
+    },
+    {
+      id: 'claude-3-5-sonnet-20241022',
+      capabilities: [
+        {
+          input: [ModelInputType.Text],
+          output: [ModelOutputType.Text],
+        },
+      ],
+    },
   ];
 
   private readonly MAX_STEPS = 20;
@@ -58,14 +75,16 @@ export class AnthropicProvider
   }
 
   protected async checkParams({
+    cond,
     messages,
-    model,
   }: {
+    cond: ModelFullConditions;
     messages?: PromptMessage[];
-    model: string;
+    embeddings?: string[];
+    options?: CopilotChatOptions;
   }) {
-    if (!(await this.isModelAvailable(model))) {
-      throw new CopilotPromptInvalid(`Invalid model: ${model}`);
+    if (!(await this.isModelAvailable(cond))) {
+      throw new CopilotPromptInvalid(`Invalid model: ${cond.modelId}`);
     }
     if (Array.isArray(messages) && messages.length > 0) {
       if (
@@ -115,20 +134,21 @@ export class AnthropicProvider
     }
   }
 
-  // ====== text to text ======
-  async generateText(
+  async text(
+    cond: ModelConditions,
     messages: PromptMessage[],
-    model: string = 'claude-3-7-sonnet-20250219',
     options: CopilotChatOptions = {}
   ): Promise<string> {
-    await this.checkParams({ messages, model });
+    const fullCond = { ...cond, outputType: ModelOutputType.Text };
+    await this.checkParams({ cond: fullCond, messages });
+    const model = this.selectModel(fullCond);
 
     try {
-      metrics.ai.counter('chat_text_calls').add(1, { model });
+      metrics.ai.counter('chat_text_calls').add(1, { model: model.id });
 
       const [system, msgs] = await chatToGPTMessage(messages);
 
-      const modelInstance = this.#instance(model);
+      const modelInstance = this.#instance(model.id);
       const { text, reasoning } = await generateText({
         model: modelInstance,
         system,
@@ -146,23 +166,25 @@ export class AnthropicProvider
 
       return reasoning ? `${reasoning}\n${text}` : text;
     } catch (e: any) {
-      metrics.ai.counter('chat_text_errors').add(1, { model });
+      metrics.ai.counter('chat_text_errors').add(1, { model: model.id });
       throw this.handleError(e);
     }
   }
 
-  async *generateTextStream(
+  async *streamText(
+    cond: ModelConditions,
     messages: PromptMessage[],
-    model: string = 'claude-3-7-sonnet-20250219',
     options: CopilotChatOptions = {}
   ): AsyncIterable<string> {
-    await this.checkParams({ messages, model });
+    const fullCond = { ...cond, outputType: ModelOutputType.Text };
+    await this.checkParams({ cond: fullCond, messages });
+    const model = this.selectModel(fullCond);
 
     try {
-      metrics.ai.counter('chat_text_stream_calls').add(1, { model });
+      metrics.ai.counter('chat_text_stream_calls').add(1, { model: model.id });
       const [system, msgs] = await chatToGPTMessage(messages);
       const { fullStream } = streamText({
-        model: this.#instance(model),
+        model: this.#instance(model.id),
         system,
         messages: msgs,
         abortSignal: options.signal,
@@ -244,7 +266,7 @@ export class AnthropicProvider
         lastType = chunk.type;
       }
     } catch (e: any) {
-      metrics.ai.counter('chat_text_stream_errors').add(1, { model });
+      metrics.ai.counter('chat_text_stream_errors').add(1, { model: model.id });
       throw this.handleError(e);
     }
   }

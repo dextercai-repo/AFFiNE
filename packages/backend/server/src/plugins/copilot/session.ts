@@ -743,7 +743,7 @@ export class ChatSessionService {
    *     // allocate a session, can be reused chat in about 12 hours with same session
    *     await using session = await session.get(sessionId);
    *     session.push(message);
-   *     copilot.generateText(session.finish(), model);
+   *     copilot.text({ modelId }, session.finish());
    * }
    * // session will be disposed after the block
    * @param sessionId session id

@@ -121,6 +121,7 @@ test.before(async t => {
 });
 
 const textPromptName = 'prompt';
+const imagePromptName = 'prompt-image';
 test.beforeEach(async t => {
   Sinon.restore();
   const { app, prompt } = t.context;
@@ -129,6 +130,10 @@ test.beforeEach(async t => {
   t.context.u1 = await app.signupV1('u1@affine.pro');
 
   await prompt.set(textPromptName, 'test', [
+    { role: 'system', content: 'hello {{word}}' },
+  ]);
+
+  await prompt.set(imagePromptName, 'test-image', [
     { role: 'system', content: 'hello {{word}}' },
   ]);
 });
@@ -441,33 +446,44 @@ test('should be able to chat with api', async t => {
   Sinon.stub(storage, 'handleRemoteLink').resolvesArg(2);
 
   const { id } = await createWorkspace(app);
-  const sessionId = await createCopilotSession(
-    app,
-    id,
-    randomUUID(),
-    textPromptName
-  );
-  const messageId = await createCopilotMessage(app, sessionId);
-  const ret = await chatWithText(app, sessionId, messageId);
-  t.is(ret, 'generate text to text', 'should be able to chat with text');
+  {
+    const sessionId = await createCopilotSession(
+      app,
+      id,
+      randomUUID(),
+      textPromptName
+    );
+    const messageId = await createCopilotMessage(app, sessionId);
+    const ret = await chatWithText(app, sessionId, messageId);
+    t.is(ret, 'generate text to text', 'should be able to chat with text');
 
-  const ret2 = await chatWithTextStream(app, sessionId, messageId);
-  t.is(
-    ret2,
-    textToEventStream('generate text to text stream', messageId),
-    'should be able to chat with text stream'
-  );
+    const ret2 = await chatWithTextStream(app, sessionId, messageId);
+    t.is(
+      ret2,
+      textToEventStream('generate text to text stream', messageId),
+      'should be able to chat with text stream'
+    );
+  }
 
-  const ret3 = await chatWithImages(app, sessionId, messageId);
-  t.is(
-    array2sse(sse2array(ret3).filter(e => e.event !== 'event')),
-    textToEventStream(
-      ['https://example.com/test.jpg', 'hello '],
-      messageId,
-      'attachment'
-    ),
-    'should be able to chat with images'
-  );
+  {
+    const sessionId = await createCopilotSession(
+      app,
+      id,
+      randomUUID(),
+      imagePromptName
+    );
+    const messageId = await createCopilotMessage(app, sessionId);
+    const ret3 = await chatWithImages(app, sessionId, messageId);
+    t.is(
+      array2sse(sse2array(ret3).filter(e => e.event !== 'event')),
+      textToEventStream(
+        ['https://example.com/test-image.jpg', 'hello '],
+        messageId,
+        'attachment'
+      ),
+      'should be able to chat with images'
+    );
+  }
 
   Sinon.restore();
 });
@@ -918,7 +934,10 @@ test('should be able to transcript', async t => {
 
   const { id: workspaceId } = await createWorkspace(app);
 
-  Sinon.stub(app.get(GeminiProvider), 'generateText').resolves(
+  Sinon.stub(app.get(GeminiProvider), 'structure').resolves(
+    '[{"a":"A","s":30,"e":45,"t":"Hello, everyone."},{"a":"B","s":46,"e":70,"t":"Hi, thank you for joining the meeting today."}]'
+  );
+  Sinon.stub(app.get(GeminiProvider), 'text').resolves(
     '[{"a":"A","s":30,"e":45,"t":"Hello, everyone."},{"a":"B","s":46,"e":70,"t":"Hi, thank you for joining the meeting today."}]'
   );
 

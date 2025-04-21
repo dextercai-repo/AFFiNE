@@ -144,6 +144,28 @@ export class CopilotWorkspaceConfigModel extends BaseModel {
     return docIds.filter(id => ignored.has(id));
   }
 
+  @Transactional()
+  async checkDocNeedEmbedded(workspaceId: string, docId: string) {
+    const result = await this.db.$queryRaw<{ needs_embedding: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1
+      FROM snapshots s
+      LEFT JOIN ai_workspace_embeddings e
+        ON s.workspace_id = e.workspace_id
+       AND s.guid = e.doc_id
+      WHERE s.workspace_id = ${workspaceId}
+        AND s.guid = ${docId}
+        AND (
+          e.updated_at IS NULL
+          OR s.updated_at > e.updated_at
+          OR e.updated_at < now() - interval '10 minutes'
+        )
+    ) AS needs_embedding;
+  `;
+
+    return result[0]?.needs_embedding ?? false;
+  }
+
   // ================ embeddings ================
 
   async checkEmbeddingAvailable(): Promise<boolean> {

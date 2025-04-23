@@ -1271,3 +1271,43 @@ test('should display date as the original title of journal', async ({
   await expect(toolbar).toBeVisible();
   await expect(linkedDocTitle).toBeHidden();
 });
+
+test('should add HTTP protocol into link automatically', async ({ page }) => {
+  await page.keyboard.press('Enter');
+
+  await page.keyboard.type('github.com');
+  await page.keyboard.type('/');
+  await page.keyboard.type('toeverything');
+  await page.keyboard.type('/');
+  await page.keyboard.type('affine');
+
+  await page.keyboard.press('Space');
+
+  const link = 'https://github.com/toeverything/affine';
+
+  const { toolbar, switchViewBtn, cardViewBtn } = toolbarButtons(page);
+
+  const inlineLink = page.locator('affine-link');
+
+  await expect(inlineLink).toBeVisible();
+
+  let url = await inlineLink.locator('a').getAttribute('href');
+  expect(url).toBe(link);
+
+  await inlineLink.hover();
+
+  const linkPreview = toolbar.locator('affine-link-preview');
+
+  url = await linkPreview.locator('a').getAttribute('href');
+  expect(url).toBe(link);
+
+  await switchViewBtn.click();
+  await cardViewBtn.click();
+
+  const cardLink = page.locator('affine-bookmark');
+
+  await expect(cardLink).toBeVisible();
+
+  url = await linkPreview.locator('a').getAttribute('href');
+  expect(url).toBe(link);
+});

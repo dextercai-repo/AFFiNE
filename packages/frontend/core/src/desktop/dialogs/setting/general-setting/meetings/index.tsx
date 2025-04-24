@@ -12,7 +12,7 @@ import {
 } from '@affine/component/setting-components';
 import { useAsyncCallback } from '@affine/core/components/hooks/affine-async-hooks';
 import { MeetingSettingsService } from '@affine/core/modules/media/services/meeting-settings';
-import type { MeetingSettingsSchema } from '@affine/electron/main/shared-state-schema';
+import type { MeetingSettingsSchema } from '@affine/electron-api';
 import { Trans, useI18n } from '@affine/i18n';
 import {
   ArrowRightSmallIcon,

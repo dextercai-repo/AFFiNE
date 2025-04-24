@@ -8,6 +8,7 @@ import {
 } from '../../../base';
 import { CopilotProviderFactory } from './factory';
 import {
+  ChatMessageRole,
   type CopilotChatOptions,
   type CopilotEmbeddingOptions,
   type CopilotImageOptions,
@@ -91,6 +92,84 @@ export abstract class CopilotProvider<C = any> {
           ? `No model supports ${outputType} output with ${inputType ?? '<any>'} input for provider ${this.type}`
           : 'Output type is required when modelId is not provided'
     );
+  }
+
+  protected async checkParams({
+    cond,
+    messages,
+    embeddings,
+    options = {},
+  }: {
+    cond: ModelFullConditions;
+    messages?: PromptMessage[];
+    embeddings?: string[];
+    options?: CopilotChatOptions;
+  }) {
+    if (!(await this.match(cond))) {
+      throw new CopilotPromptInvalid(
+        `Model not available: ${JSON.stringify(cond)}`
+      );
+    }
+
+    const model = this.selectModel(cond);
+    const multimodal = model.capabilities.some(
+      c =>
+        c.input.includes(ModelInputType.Image) ||
+        c.input.includes(ModelInputType.Audio)
+    );
+    const requireContent = options?.requireContent ?? true;
+    const requireAttachment = options?.requireAttachment ?? false;
+
+    if (Array.isArray(messages) && messages.length > 0) {
+      if (
+        messages.some(
+          m =>
+            // check non-object
+            typeof m !== 'object' ||
+            !m ||
+            // check content
+            (requireContent &&
+              (typeof m.content !== 'string' ||
+                !m.content ||
+                !m.content.trim())) ||
+            // check attachment
+            (multimodal &&
+              m.attachments &&
+              (!Array.isArray(m.attachments) ||
+                (!!requireAttachment &&
+                  m.role === 'user' &&
+                  !m.attachments.length)))
+        )
+      ) {
+        throw new CopilotPromptInvalid('Empty message content');
+      }
+      if (
+        messages.some(
+          m =>
+            typeof m.role !== 'string' ||
+            !m.role ||
+            !ChatMessageRole.includes(m.role)
+        )
+      ) {
+        throw new CopilotPromptInvalid('Invalid message role');
+      }
+
+      // json mode need 'json' keyword in content
+      // ref: https://platform.openai.com/docs/api-reference/chat/create#chat-create-response_format
+      if (
+        'jsonMode' in options &&
+        options.jsonMode &&
+        !messages.some(m => m.content.toLowerCase().includes('json'))
+      ) {
+        throw new CopilotPromptInvalid('Prompt not support json mode');
+      }
+    }
+    if (
+      Array.isArray(embeddings) &&
+      embeddings.some(e => typeof e !== 'string' || !e || !e.trim())
+    ) {
+      throw new CopilotPromptInvalid('Invalid embedding');
+    }
   }
 
   abstract text(

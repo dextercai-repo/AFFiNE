@@ -12,6 +12,7 @@ import {
   generateText,
   streamText,
 } from 'ai';
+import { z } from 'zod';
 
 import {
   CopilotPromptInvalid,
@@ -44,6 +45,20 @@ type OpenAITools = {
   web_search_exa: ReturnType<typeof createExaSearchTool>;
   web_crawl_exa: ReturnType<typeof createExaCrawlTool>;
 };
+
+const ImageResponseSchema = z.union([
+  z.object({
+    data: z.array(z.object({ b64_json: z.string() })),
+  }),
+  z.object({
+    error: z.object({
+      message: z.string(),
+      type: z.string().nullish(),
+      param: z.any().nullish(),
+      code: z.union([z.string(), z.number()]).nullish(),
+    }),
+  }),
+]);
 
 export class OpenAIProvider extends CopilotProvider<OpenAIConfig> {
   readonly type = CopilotProviderType.OpenAI;
@@ -451,6 +466,57 @@ export class OpenAIProvider extends CopilotProvider<OpenAIConfig> {
     }
   }
 
+  // ====== text to image ======
+  private async *generateImageWithAttachments(
+    model: string,
+    prompt: string,
+    attachments: NonNullable<PromptMessage['attachments']>
+  ): AsyncGenerator<string> {
+    const form = new FormData();
+    form.set('model', model);
+    form.set('prompt', prompt);
+    form.set('output_format', 'webp');
+
+    for (const [idx, entry] of attachments.entries()) {
+      const url = typeof entry === 'string' ? entry : entry.attachment;
+      const resp = await fetch(url);
+      if (resp.ok) {
+        const type = resp.headers.get('content-type');
+        if (type && type.startsWith('image/')) {
+          const buffer = new Uint8Array(await resp.arrayBuffer());
+          const file = new File([buffer], `${idx}.png`, { type });
+          form.append('image[]', file);
+        }
+      }
+    }
+
+    const url = `${this.config.baseUrl || 'https://api.openai.com'}/v1/images/edits`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${this.config.apiKey}` },
+      body: form,
+    });
+
+    if (!res.ok) {
+      throw new Error(`OpenAI API error ${res.status}: ${await res.text()}`);
+    }
+
+    const json = await res.json();
+    const imageResponse = ImageResponseSchema.safeParse(json);
+    if (imageResponse.success) {
+      const data = imageResponse.data;
+      if ('error' in data) {
+        throw new Error(data.error.message);
+      } else {
+        for (const image of data.data) {
+          yield `data:image/webp;base64,${image.b64_json}`;
+        }
+      }
+    } else {
+      throw new Error(imageResponse.error.message);
+    }
+  }
+
   override async *streamImages(
     cond: ModelConditions,
     messages: PromptMessage[],
@@ -464,30 +530,33 @@ export class OpenAIProvider extends CopilotProvider<OpenAIConfig> {
       .counter('generate_images_stream_calls')
       .add(1, { model: model.id });
 
-    const { content: prompt } = [...messages].pop() || {};
+    const { content: prompt, attachments } = [...messages].pop() || {};
     if (!prompt) throw new CopilotPromptInvalid('Prompt is required');
 
     try {
-      const modelInstance = this.#instance.image(model.id);
-
-      const result = await generateImage({
-        model: modelInstance,
-        prompt,
-        providerOptions: {
-          openai: {
-            quality: options.quality || null,
+      if (attachments && attachments.length > 0) {
+        yield* this.generateImageWithAttachments(model.id, prompt, attachments);
+      } else {
+        const modelInstance = this.#instance.image(model.id);
+        const result = await generateImage({
+          model: modelInstance,
+          prompt,
+          providerOptions: {
+            openai: {
+              quality: options.quality || null,
+            },
           },
-        },
-      });
+        });
 
-      const imageUrls = result.images.map(
-        image => `data:image/png;base64,${image.base64}`
-      );
+        const imageUrls = result.images.map(
+          image => `data:image/png;base64,${image.base64}`
+        );
 
-      for (const imageUrl of imageUrls) {
-        yield imageUrl;
-        if (options.signal?.aborted) {
-          break;
+        for (const imageUrl of imageUrls) {
+          yield imageUrl;
+          if (options.signal?.aborted) {
+            break;
+          }
         }
       }
       return;

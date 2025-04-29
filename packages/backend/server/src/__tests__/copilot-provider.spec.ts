@@ -502,12 +502,7 @@ const actions = [
     type: 'text' as const,
   },
   {
-    promptName: [
-      'debug:action:fal-face-to-sticker',
-      'debug:action:fal-remove-bg',
-      'debug:action:fal-sd15',
-      'debug:action:fal-upscaler',
-    ],
+    promptName: ['Convert to sticker', 'Remove background', 'Upscale image'],
     messages: [
       {
         role: 'user' as const,

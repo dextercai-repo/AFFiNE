@@ -27,18 +27,18 @@ function toAIUserInfo(account: AuthAccountInfo | null) {
 
 const filterStyleToPromptName = new Map<string, PromptKey>(
   Object.entries({
-    'Clay style': 'workflow:image-clay',
-    'Pixel style': 'workflow:image-pixel',
-    'Sketch style': 'workflow:image-sketch',
-    'Anime style': 'workflow:image-anime',
+    'Clay style': 'Convert to Clay style',
+    'Pixel style': 'Convert to Pixel style',
+    'Sketch style': 'Convert to Sketch style',
+    'Anime style': 'Convert to Anime style',
   })
 );
 
 const processTypeToPromptName = new Map<string, PromptKey>(
   Object.entries({
-    Clearer: 'debug:action:fal-upscaler',
-    'Remove background': 'debug:action:fal-remove-bg',
-    'Convert to sticker': 'debug:action:fal-face-to-sticker',
+    Clearer: 'Upscale image',
+    'Remove background': 'Remove background',
+    'Convert to sticker': 'Convert to sticker',
   })
 );
 
@@ -486,22 +486,18 @@ Could you make a new website based on these notes and send back just the html fi
   });
 
   AIProvider.provide('createImage', async options => {
-    // test to image
-    let promptName: PromptKey = 'debug:action:gpt-image-1';
-    // image to image
-    if (options.attachments?.length) {
-      promptName = 'debug:action:fal-sd15';
-    }
-
     const sessionId = await createSession({
-      promptName,
+      promptName: 'Generate image',
       ...options,
     });
     return toImage({
       ...options,
       client,
       sessionId,
-      content: options.input,
+      content:
+        !options.input && options.attachments
+          ? 'Make the image more detailed.'
+          : options.input,
       // 5 minutes
       timeout: 300000,
     });

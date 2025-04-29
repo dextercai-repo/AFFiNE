@@ -537,12 +537,19 @@ test('should be able to chat with special image model', async t => {
     );
   };
 
-  await testWithModel('debug:action:fal-sd15', 'some-tag');
+  await testWithModel('Generate image', 'some-tag');
   await testWithModel(
-    'debug:action:fal-upscaler',
-    'best quality, 8K resolution, highres, clarity, some-tag'
+    'Convert to sticker',
+    'convert this image to sticker. you need to identify the subject matter and warp a circle of white stroke around the subject matter and with transparent background. some-tag'
   );
-  await testWithModel('debug:action:fal-remove-bg', 'some-tag');
+  await testWithModel(
+    'Upscale image',
+    'make the image more detailed. some-tag'
+  );
+  await testWithModel(
+    'Remove background',
+    'Keep the subject and remove other non-subject items. Transparent background. some-tag'
+  );
 
   Sinon.restore();
 });

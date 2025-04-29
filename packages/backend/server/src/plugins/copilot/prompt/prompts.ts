@@ -21,12 +21,6 @@ type Prompt = Omit<
 
 const workflows: Prompt[] = [
   {
-    name: 'debug:action:fal-teed',
-    action: 'fal-teed',
-    model: 'workflowutils/teed',
-    messages: [{ role: 'user', content: '{{content}}' }],
-  },
-  {
     name: 'workflow:presentation',
     action: 'workflow:presentation',
     // used only in workflow, point to workflow graph name
@@ -305,48 +299,7 @@ const workflows: Prompt[] = [
   },
 ];
 
-const actions: Prompt[] = [
-  {
-    name: 'debug:action:dalle3',
-    action: 'image',
-    model: 'dall-e-3',
-    messages: [],
-  },
-  {
-    name: 'debug:action:gpt-image-1',
-    action: 'image',
-    model: 'gpt-image-1',
-    messages: [],
-  },
-  {
-    name: 'debug:action:fal-sd15',
-    action: 'image',
-    model: 'lcm-sd15-i2i',
-    messages: [],
-  },
-  {
-    name: 'debug:action:fal-upscaler',
-    action: 'Clearer',
-    model: 'clarity-upscaler',
-    messages: [
-      {
-        role: 'user',
-        content: 'best quality, 8K resolution, highres, clarity, {{content}}',
-      },
-    ],
-  },
-  {
-    name: 'debug:action:fal-remove-bg',
-    action: 'Remove background',
-    model: 'imageutils/rembg',
-    messages: [],
-  },
-  {
-    name: 'debug:action:fal-face-to-sticker',
-    action: 'Convert to sticker',
-    model: 'face-to-sticker',
-    messages: [],
-  },
+const textActions: Prompt[] = [
   {
     name: 'Transcript audio',
     action: 'Transcript audio',
@@ -1091,6 +1044,153 @@ Finally, please only send us the content of your continuation in Markdown Format
   },
 ];
 
+const imageActions: Prompt[] = [
+  {
+    name: 'Generate image',
+    action: 'image',
+    model: 'gpt-image-1',
+    messages: [
+      {
+        role: 'user',
+        content: '{{content}}',
+      },
+    ],
+  },
+  {
+    name: 'Convert to Clay style',
+    action: 'Convert to Clay style',
+    model: 'gpt-image-1',
+    messages: [
+      {
+        role: 'user',
+        content:
+          'Migration style. Migrates the style from the first image to the second. turn to clay/claymation style. {{content}}',
+      },
+    ],
+  },
+  {
+    name: 'Convert to Sketch style',
+    action: 'Convert to Sketch style',
+    model: 'gpt-image-1',
+    messages: [
+      {
+        role: 'user',
+        content: 'turn to mono-color sketch style. {{content}}',
+      },
+    ],
+  },
+  {
+    name: 'Convert to Anime style',
+    action: 'Convert to Anime style',
+    model: 'gpt-image-1',
+    messages: [
+      {
+        role: 'user',
+        content: 'turn to Suzume style like anime style. {{content}}',
+      },
+    ],
+  },
+  {
+    name: 'Convert to Pixel style',
+    action: 'Convert to Pixel style',
+    model: 'gpt-image-1',
+    messages: [
+      {
+        role: 'user',
+        content: 'turn to kairosoft pixel art. {{content}}',
+      },
+    ],
+  },
+  {
+    name: 'Convert to sticker',
+    action: 'Convert to sticker',
+    model: 'gpt-image-1',
+    messages: [
+      {
+        role: 'user',
+        content:
+          'convert this image to sticker. you need to identify the subject matter and warp a circle of white stroke around the subject matter and with transparent background. {{content}}',
+      },
+    ],
+  },
+  {
+    name: 'Upscale image',
+    action: 'Upscale image',
+    model: 'gpt-image-1',
+    messages: [
+      {
+        role: 'user',
+        content: 'make the image more detailed. {{content}}',
+      },
+    ],
+  },
+  {
+    name: 'Remove background',
+    action: 'Remove background',
+    model: 'gpt-image-1',
+    messages: [
+      {
+        role: 'user',
+        content:
+          'Keep the subject and remove other non-subject items. Transparent background. {{content}}',
+      },
+    ],
+  },
+  // TODO(@darkskygit): deprecated, remove it after <0.22 version is outdated
+  {
+    name: 'debug:action:fal-remove-bg',
+    action: 'Remove background',
+    model: 'imageutils/rembg',
+    messages: [],
+  },
+  {
+    name: 'debug:action:fal-face-to-sticker',
+    action: 'Convert to sticker',
+    model: 'face-to-sticker',
+    messages: [],
+  },
+  {
+    name: 'debug:action:fal-teed',
+    action: 'fal-teed',
+    model: 'workflowutils/teed',
+    messages: [{ role: 'user', content: '{{content}}' }],
+  },
+  {
+    name: 'debug:action:dalle3',
+    action: 'image',
+    model: 'dall-e-3',
+    messages: [],
+  },
+  {
+    name: 'debug:action:gpt-image-1',
+    action: 'image',
+    model: 'gpt-image-1',
+    messages: [
+      {
+        role: 'user',
+        content: '{{content}}',
+      },
+    ],
+  },
+  {
+    name: 'debug:action:fal-sd15',
+    action: 'image',
+    model: 'lcm-sd15-i2i',
+    messages: [],
+  },
+  {
+    name: 'debug:action:fal-upscaler',
+    action: 'Clearer',
+    model: 'clarity-upscaler',
+    messages: [
+      {
+        role: 'user',
+        content: 'best quality, 8K resolution, highres, clarity, {{content}}',
+      },
+    ],
+  },
+];
+
 const chat: Prompt[] = [
   {
     name: 'Chat With AFFiNE AI',
@@ -1204,7 +1304,12 @@ Below is the user's query. Please respond in the user's preferred language witho
   },
 ];
 
-export const prompts: Prompt[] = [...actions, ...chat, ...workflows];
+export const prompts: Prompt[] = [
+  ...textActions,
+  ...imageActions,
+  ...chat,
+  ...workflows,
+];
 
 export async function refreshPrompts(db: PrismaClient) {
   const needToSkip = await db.aiPrompt

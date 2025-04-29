@@ -84,29 +84,12 @@ export class MockCopilotProvider extends OpenAIProvider {
       ],
     },
     {
-      id: 'lcm-sd15-i2i',
+      id: 'gpt-image-1',
       capabilities: [
         {
-          input: [ModelInputType.Image],
+          input: [ModelInputType.Text, ModelInputType.Image],
           output: [ModelOutputType.Image],
-        },
-      ],
-    },
-    {
-      id: 'clarity-upscaler',
-      capabilities: [
-        {
-          input: [ModelInputType.Image],
-          output: [ModelOutputType.Image],
-        },
-      ],
-    },
-    {
-      id: 'imageutils/rembg',
-      capabilities: [
-        {
-          input: [ModelInputType.Image],
-          output: [ModelOutputType.Image],
+          defaultForOutputType: true,
         },
       ],
     },

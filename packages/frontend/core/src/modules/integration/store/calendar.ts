@@ -8,6 +8,7 @@ import type { WorkspaceService } from '../../workspace';
 
 export interface CalendarSubscriptionConfig {
   color: string;
+  name?: string;
   showEvents?: boolean;
   showAllDayEvents?: boolean;
 }

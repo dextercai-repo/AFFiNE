@@ -1,4 +1,4 @@
-import { Button, Menu, useConfirmModal } from '@affine/component';
+import { Button, InlineEdit, Menu, useConfirmModal } from '@affine/component';
 import {
   type CalendarSubscription,
   IntegrationService,
@@ -41,6 +41,13 @@ export const SubscriptionSetting = ({
     });
   }, [calendar, subscription.url, config?.showAllDayEvents]);
 
+  const handleNameChange = useCallback(
+    (value: string) => {
+      calendar.updateSubscription(subscription.url, { name: value });
+    },
+    [calendar, subscription.url]
+  );
+
   if (!config) return null;
 
   return (
@@ -61,7 +68,13 @@ export const SubscriptionSetting = ({
             style={{ color: config.color }}
           />
         </Menu>
-        <div className={styles.name}>{name}</div>
+        <InlineEdit
+          className={styles.name}
+          editable
+          trigger="click"
+          value={name}
+          onChange={handleNameChange}
+        />
         <UnsubscribeButton url={subscription.url} name={name} />
       </div>
       <div className={styles.divider} />

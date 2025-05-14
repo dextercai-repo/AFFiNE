@@ -4438,7 +4438,7 @@ export function useAFFiNEI18N(): {
       */
     ["com.affine.payment.license-success.text-1"](): string;
     /**
-      * `You can use this key to upgrade in Settings > Workspace > Billing > Upgrade`
+      * `You can use this key to upgrade in Settings > Workspace > License > Use purchased key`
       */
     ["com.affine.payment.license-success.hint"](): string;
     /**
@@ -6001,13 +6001,61 @@ export function useAFFiNEI18N(): {
       */
     ["com.affine.settings.workspace.license.self-host-team.seats"](): string;
     /**
-      * `Active key`
+      * `Use purchased key`
       */
-    ["com.affine.settings.workspace.license.self-host-team.active-key"](): string;
+    ["com.affine.settings.workspace.license.self-host-team.use-purchased-key"](): string;
+    /**
+      * `Upload license file`
+      */
+    ["com.affine.settings.workspace.license.self-host-team.upload-license-file"](): string;
+    /**
+      * `Upload license file locally and verify the license information.`
+      */
+    ["com.affine.settings.workspace.license.self-host-team.upload-license-file.description"](): string;
+    /**
+      * `To purchase a license:`
+      */
+    ["com.affine.settings.workspace.license.self-host-team.upload-license-file.tips.title"](): string;
+    /**
+      * `Workspace id`
+      */
+    ["com.affine.settings.workspace.license.self-host-team.upload-license-file.tips.workspace-id"](): string;
+    /**
+      * `Click to upload`
+      */
+    ["com.affine.settings.workspace.license.self-host-team.upload-license-file.click-to-upload"](): string;
+    /**
+      * `Activation failed`
+      */
+    ["com.affine.settings.workspace.license.self-host-team.upload-license-file.failed"](): string;
+    /**
+      * `Activation Success`
+      */
+    ["com.affine.settings.workspace.license.self-host-team.upload-license-file.success.title"](): string;
+    /**
+      * `License has been successfully applied`
+      */
+    ["com.affine.settings.workspace.license.self-host-team.upload-license-file.success.description"](): string;
+    /**
+      * `If you encounter any issues, contact support@toeverything.info.`
+      */
+    ["com.affine.settings.workspace.license.self-host-team.upload-license-file.help"](): string;
     /**
       * `Deactivate`
       */
     ["com.affine.settings.workspace.license.self-host-team.deactivate-license"](): string;
+    /**
+      * `Replace your license file`
+      */
+    ["com.affine.settings.workspace.license.self-host-team.replace-license.title"](): string;
+    /**
+      * `Replace the existing license file with a new, updated version.`
+      */
+    ["com.affine.settings.workspace.license.self-host-team.replace-license.description"](): string;
+    /**
+      * `Upload license file`
+      */
+    ["com.affine.settings.workspace.license.self-host-team.replace-license.upload"](): string;
     /**
       * `Buy more seat`
       */
@@ -6025,13 +6073,17 @@ export function useAFFiNEI18N(): {
       */
     ["com.affine.settings.workspace.license.activate-success"](): string;
     /**
-      * `Deactivate License`
+      * `Confirm deactivation?`
       */
     ["com.affine.settings.workspace.license.deactivate-modal.title"](): string;
     /**
-      * `Are you sure you want to deactivate this license?`
+      * `After deactivation, you will need to upload a new license to continue using team feature`
       */
-    ["com.affine.settings.workspace.license.deactivate-modal.description"](): string;
+    ["com.affine.settings.workspace.license.deactivate-modal.description-license"](): string;
+    /**
+      * `Manage Payment`
+      */
+    ["com.affine.settings.workspace.license.deactivate-modal.manage-payment"](): string;
     /**
       * `License deactivated successfully.`
       */
@@ -8976,11 +9028,28 @@ export const TypedTrans: {
         ["1"]: JSX.Element;
     }>>;
     /**
-      * `If you encounter any issues, please contact our <1>customer support</1>. No license yet? <2>Click to purchase</2>.`
+      * `Activate using the local key from <1>Toeverything.Inc</1>`
+      */
+    ["com.affine.settings.workspace.license.self-host-team.team.license"]: ComponentType<TypedTransProps<Readonly<{}>, {
+        ["1"]: JSX.Element;
+    }>>;
+    /**
+      * `Copy your workspace id and <1>reach out to us</1>.`
+      */
+    ["com.affine.settings.workspace.license.self-host-team.upload-license-file.tips.content"]: ComponentType<TypedTransProps<Readonly<{}>, {
+        ["1"]: JSX.Element;
+    }>>;
+    /**
+      * `If you encounter any issues, contact support@toeverything.info. No license yet? <1>Click to purchase</1>.`
       */
     ["com.affine.settings.workspace.license.activate-modal.tips"]: ComponentType<TypedTransProps<Readonly<{}>, {
         ["1"]: JSX.Element;
-        ["2"]: JSX.Element;
+    }>>;
+    /**
+      * `This will make the workspace read-only. Your key remains usable elsewhere. Deactivation doesn't cancel your Team plan. To cancel, go to <1>Manage Payment</1>.`
+      */
+    ["com.affine.settings.workspace.license.deactivate-modal.description"]: ComponentType<TypedTransProps<Readonly<{}>, {
+        ["1"]: JSX.Element;
     }>>;
     /**
       * `The "<1>{{ name }}</1>" property will be removed. This action cannot be undone.`

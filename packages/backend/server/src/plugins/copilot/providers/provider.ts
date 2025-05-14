@@ -159,7 +159,9 @@ export abstract class CopilotProvider<C = any> {
       if (
         'jsonMode' in options &&
         options.jsonMode &&
-        !messages.some(m => m.content.toLowerCase().includes('json'))
+        !messages.some(
+          m => m.content && m.content.toLowerCase().includes('json')
+        )
       ) {
         throw new CopilotPromptInvalid('Prompt not support json mode');
       }

@@ -1,19 +1,18 @@
 import { LiveData } from '@toeverything/infra';
 import { createContext } from 'react';
 
-import type { DocListItemView } from './docs-view/doc-list-item';
-import type { ExplorerPreference } from './types';
+import type { ExplorerDisplayPreference } from './types';
 
 export type DocExplorerContextType = {
-  view$: LiveData<DocListItemView>;
   groups$: LiveData<Array<{ key: string; items: string[] }>>;
   collapsedGroups$: LiveData<string[]>;
   selectMode$?: LiveData<boolean>;
   selectedDocIds$: LiveData<string[]>;
   prevCheckAnchorId$?: LiveData<string | null>;
+  displayPreference$: LiveData<ExplorerDisplayPreference>;
 } & {
-  [K in keyof Omit<ExplorerPreference, 'filters'> as `${K}$`]: LiveData<
-    ExplorerPreference[K]
+  [K in keyof ExplorerDisplayPreference as `${K}$`]: LiveData<
+    ExplorerDisplayPreference[K]
   >;
 };
 
@@ -21,24 +20,51 @@ export const DocExplorerContext = createContext<DocExplorerContextType>(
   {} as any
 );
 
-export const createDocExplorerContext = () =>
-  ({
-    view$: new LiveData<DocListItemView>('list'),
+export const createDocExplorerContext = (
+  initialState?: ExplorerDisplayPreference
+) => {
+  const displayPreference$ = new LiveData<ExplorerDisplayPreference>(
+    initialState ?? {}
+  );
+  return {
     groups$: new LiveData<Array<{ key: string; items: string[] }>>([]),
     collapsedGroups$: new LiveData<string[]>([]),
     selectMode$: new LiveData<boolean>(false),
     selectedDocIds$: new LiveData<string[]>([]),
     prevCheckAnchorId$: new LiveData<string | null>(null),
-    groupBy$: new LiveData<ExplorerPreference['groupBy']>(undefined),
-    orderBy$: new LiveData<ExplorerPreference['orderBy']>(undefined),
-    displayProperties$: new LiveData<ExplorerPreference['displayProperties']>(
-      []
+    displayPreference$: displayPreference$,
+    view$: displayPreference$.selector(
+      displayPreference => displayPreference.view
     ),
-    showDocIcon$: new LiveData<ExplorerPreference['showDocIcon']>(true),
-    showDocPreview$: new LiveData<ExplorerPreference['showDocPreview']>(true),
-    quickFavorite$: new LiveData<ExplorerPreference['quickFavorite']>(false),
-    quickSelect$: new LiveData<ExplorerPreference['quickSelect']>(false),
-    quickSplit$: new LiveData<ExplorerPreference['quickSplit']>(false),
-    quickTrash$: new LiveData<ExplorerPreference['quickTrash']>(false),
-    quickTab$: new LiveData<ExplorerPreference['quickTab']>(false),
-  }) satisfies DocExplorerContextType;
+    groupBy$: displayPreference$.selector(
+      displayPreference => displayPreference.groupBy
+    ),
+    orderBy$: displayPreference$.selector(
+      displayPreference => displayPreference.orderBy
+    ),
+    displayProperties$: displayPreference$.selector(
+      displayPreference => displayPreference.displayProperties
+    ),
+    showDocIcon$: displayPreference$.selector(
+      displayPreference => displayPreference.showDocIcon
+    ),
+    showDocPreview$: displayPreference$.selector(
+      displayPreference => displayPreference.showDocPreview
+    ),
+    quickFavorite$: displayPreference$.selector(
+      displayPreference => displayPreference.quickFavorite
+    ),
+    quickSelect$: displayPreference$.selector(
+      displayPreference => displayPreference.quickSelect
+    ),
+    quickSplit$: displayPreference$.selector(
+      displayPreference => displayPreference.quickSplit
+    ),
+    quickTrash$: displayPreference$.selector(
+      displayPreference => displayPreference.quickTrash
+    ),
+    quickTab$: displayPreference$.selector(
+      displayPreference => displayPreference.quickTab
+    ),
+  } satisfies DocExplorerContextType;
+};

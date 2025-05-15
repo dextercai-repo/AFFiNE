@@ -108,7 +108,10 @@ export const PinnedCollections = ({
       <div
         className={styles.item}
         data-active={activeCollectionId === null ? 'true' : undefined}
-        onClick={onActiveAll}
+        onClick={() =>
+          // only fire onActiveAll if the collection is not already active
+          activeCollectionId !== null ? onActiveAll() : undefined
+        }
         role="button"
       >
         {t['com.affine.all-docs.pinned-collection.all']()}
@@ -118,7 +121,12 @@ export const PinnedCollections = ({
           key={record.collectionId}
           record={record}
           isActive={activeCollectionId === record.collectionId}
-          onClick={() => onActiveCollection(record.collectionId)}
+          onClick={() =>
+            // only fire onActiveCollection if the collection is not already active
+            activeCollectionId !== record.collectionId
+              ? onActiveCollection(record.collectionId)
+              : undefined
+          }
           onClickEdit={() => onEditCollection(record.collectionId)}
           onClickRemove={() => {
             const nextCollectionId = pinnedCollections[index - 1]?.collectionId;

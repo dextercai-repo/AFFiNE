@@ -1,12 +1,19 @@
 import { Checkbox, MenuItem, MenuSub } from '@affine/component';
 import { useI18n } from '@affine/i18n';
-import { useLiveData } from '@toeverything/infra';
-import { useCallback, useContext } from 'react';
+import { useCallback } from 'react';
 
-import { DocExplorerContext } from '../context';
 import { type QuickAction, quickActions } from '../quick-actions.constants';
+import type { ExplorerDisplayPreference } from '../types';
 
-export const QuickActionsConfig = () => {
+export const QuickActionsConfig = ({
+  displayPreference,
+  onDisplayPreferenceChange,
+}: {
+  displayPreference: ExplorerDisplayPreference;
+  onDisplayPreferenceChange: (
+    displayPreference: ExplorerDisplayPreference
+  ) => void;
+}) => {
   const t = useI18n();
 
   return (
@@ -14,7 +21,19 @@ export const QuickActionsConfig = () => {
       items={quickActions.map(action => {
         if (action.disabled) return null;
 
-        return <QuickActionItem key={action.key} action={action} />;
+        return (
+          <QuickActionItem
+            key={action.key}
+            action={action}
+            active={displayPreference[`${action.key}`] ?? false}
+            onClick={() => {
+              onDisplayPreferenceChange({
+                ...displayPreference,
+                [action.key]: !displayPreference[action.key],
+              });
+            }}
+          />
+        );
       })}
     >
       {t['com.affine.all-docs.quick-actions']()}
@@ -22,24 +41,28 @@ export const QuickActionsConfig = () => {
   );
 };
 
-const QuickActionItem = ({ action }: { action: QuickAction }) => {
+const QuickActionItem = ({
+  action,
+  active,
+  onClick,
+}: {
+  action: QuickAction;
+  active: boolean;
+  onClick: () => void;
+}) => {
   const t = useI18n();
-  const explorerContextValue = useContext(DocExplorerContext);
-
-  const value = useLiveData(explorerContextValue[`${action.key}$`]);
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
       e.preventDefault();
-      const value = explorerContextValue[`${action.key}$`]?.value;
-      explorerContextValue[`${action.key}$`]?.next(!value);
+      onClick();
     },
-    [action.key, explorerContextValue]
+    [onClick]
   );
 
   return (
-    <MenuItem prefixIcon={<Checkbox checked={!!value} />} onClick={handleClick}>
+    <MenuItem prefixIcon={<Checkbox checked={active} />} onClick={handleClick}>
       {t.t(action.name)}
     </MenuItem>
   );

@@ -5,6 +5,7 @@ import {
   DocExplorerContext,
 } from '@affine/core/components/explorer/context';
 import { DocsExplorer } from '@affine/core/components/explorer/docs-view/docs-list';
+import type { ExplorerDisplayPreference } from '@affine/core/components/explorer/types';
 import {
   type Collection,
   CollectionService,
@@ -45,10 +46,20 @@ export const CollectionDetail = ({
   const isAdmin = useLiveData(permissionService.permission.isAdmin$);
   const isOwner = useLiveData(permissionService.permission.isOwner$);
 
+  const displayPreference = useLiveData(
+    explorerContextValue.displayPreference$
+  );
   const groupBy = useLiveData(explorerContextValue.groupBy$);
   const orderBy = useLiveData(explorerContextValue.orderBy$);
   const rules = useLiveData(collection.rules$);
   const allowList = useLiveData(collection.allowList$);
+
+  const handleDisplayPreferenceChange = useCallback(
+    (displayPreference: ExplorerDisplayPreference) => {
+      explorerContextValue.displayPreference$.next(displayPreference);
+    },
+    [explorerContextValue]
+  );
 
   useEffect(() => {
     const subscription = collectionRulesService
@@ -95,7 +106,10 @@ export const CollectionDetail = ({
   return (
     <DocExplorerContext.Provider value={explorerContextValue}>
       <ViewHeader>
-        <CollectionDetailHeader />
+        <CollectionDetailHeader
+          displayPreference={displayPreference}
+          onDisplayPreferenceChange={handleDisplayPreferenceChange}
+        />
       </ViewHeader>
       <ViewBody>
         <FlexWrapper flexDirection="column" alignItems="stretch" width="100%">

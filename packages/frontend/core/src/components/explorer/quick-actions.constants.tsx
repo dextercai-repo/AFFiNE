@@ -8,7 +8,7 @@ import {
   QuickSplit,
   QuickTab,
 } from './docs-view/quick-actions';
-import type { ExplorerPreference } from './types';
+import type { ExplorerDisplayPreference } from './types';
 
 interface QuickActionItem {
   name: I18nString;
@@ -20,7 +20,10 @@ type ExtractPrefixKeys<Obj extends object, Prefix extends string> = {
   [Key in keyof Obj]-?: Key extends `${Prefix}${string}` ? Key : never;
 }[keyof Obj];
 
-export type QuickActionKey = ExtractPrefixKeys<ExplorerPreference, 'quick'>;
+export type QuickActionKey = ExtractPrefixKeys<
+  ExplorerDisplayPreference,
+  'quick'
+>;
 
 const QUICK_ACTION_MAP: Record<QuickActionKey, QuickActionItem> = {
   quickFavorite: {

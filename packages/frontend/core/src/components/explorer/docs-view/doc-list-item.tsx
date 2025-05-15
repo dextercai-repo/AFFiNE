@@ -67,7 +67,7 @@ class MixId {
 }
 export const DocListItem = ({ ...props }: DocListItemProps) => {
   const contextValue = useContext(DocExplorerContext);
-  const view = useLiveData(contextValue.view$);
+  const view = useLiveData(contextValue.view$) ?? 'list';
   const groups = useLiveData(contextValue.groups$);
   const selectMode = useLiveData(contextValue.selectMode$);
   const selectedDocIds = useLiveData(contextValue.selectedDocIds$);
@@ -255,7 +255,7 @@ const Select = memo(function Select({
     </div>
   );
 });
-// Different with RawDocIcon, refer to `ExplorerPreference.showDocIcon`
+// Different with RawDocIcon, refer to `ExplorerDisplayPreference.showDocIcon`
 const DocIcon = memo(function DocIcon({
   id,
   ...props

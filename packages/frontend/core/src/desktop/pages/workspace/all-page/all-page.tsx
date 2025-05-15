@@ -4,6 +4,7 @@ import {
   DocExplorerContext,
 } from '@affine/core/components/explorer/context';
 import { DocsExplorer } from '@affine/core/components/explorer/docs-view/docs-list';
+import type { ExplorerDisplayPreference } from '@affine/core/components/explorer/types';
 import { Filters } from '@affine/core/components/filter';
 import {
   CollectionService,
@@ -12,9 +13,10 @@ import {
 import { CollectionRulesService } from '@affine/core/modules/collection-rules';
 import type { FilterParams } from '@affine/core/modules/collection-rules/types';
 import { FeatureFlagService } from '@affine/core/modules/feature-flag';
+import { WorkspaceLocalState } from '@affine/core/modules/workspace';
 import { useI18n } from '@affine/i18n';
 import { useLiveData, useService } from '@toeverything/infra';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   ViewBody,
@@ -29,11 +31,22 @@ import { AllDocsHeader } from './all-page-header';
 import { MigrationAllDocsDataNotification } from './migration-data';
 import { PinnedCollections } from './pinned-collections';
 
+interface AllDocsStateSave extends ExplorerDisplayPreference {
+  selectedCollectionId: string | null;
+}
+
 export const AllPage = () => {
   const t = useI18n();
 
   const collectionService = useService(CollectionService);
   const pinnedCollectionService = useService(PinnedCollectionService);
+  const workspaceLocalState = useService(WorkspaceLocalState);
+
+  const [initialState] = useState(() => {
+    return workspaceLocalState.get<AllDocsStateSave>(
+      'allDocsDisplayPreference'
+    );
+  });
 
   const isCollectionDataReady = useLiveData(
     collectionService.collectionDataReady$
@@ -49,7 +62,7 @@ export const AllPage = () => {
 
   const [selectedCollectionId, setSelectedCollectionId] = useState<
     string | null
-  >(null);
+  >(initialState?.selectedCollectionId ?? null);
   const selectedCollection = useLiveData(
     selectedCollectionId
       ? collectionService.collection$(selectedCollectionId)
@@ -80,10 +93,26 @@ export const AllPage = () => {
 
   const [tempFilters, setTempFilters] = useState<FilterParams[] | null>(null);
 
-  const [explorerContextValue] = useState(createDocExplorerContext);
+  const [explorerContextValue] = useState(() =>
+    createDocExplorerContext(initialState)
+  );
 
   const groupBy = useLiveData(explorerContextValue.groupBy$);
   const orderBy = useLiveData(explorerContextValue.orderBy$);
+  const displayPreference = useLiveData(
+    explorerContextValue.displayPreference$
+  );
+
+  const allDocsStateSave = useMemo(() => {
+    return {
+      ...displayPreference,
+      selectedCollectionId,
+    };
+  }, [displayPreference, selectedCollectionId]);
+
+  useEffect(() => {
+    workspaceLocalState.set('allDocsDisplayPreference', allDocsStateSave);
+  }, [allDocsStateSave, workspaceLocalState]);
 
   const { openPromptModal } = usePromptModal();
 
@@ -187,6 +216,11 @@ export const AllPage = () => {
     setTempFilters(null);
   }, []);
 
+  const handleSelectAll = useCallback(() => {
+    setSelectedCollectionId(null);
+    setTempFilters(null);
+  }, []);
+
   const handleEditCollection = useCallback(
     (collectionId: string) => {
       const collection = collectionService.collection$(collectionId).value;
@@ -250,12 +284,22 @@ export const AllPage = () => {
     setTempFilters([params]);
   }, []);
 
+  const handleDisplayPreferenceChange = useCallback(
+    (displayPreference: ExplorerDisplayPreference) => {
+      explorerContextValue.displayPreference$.next(displayPreference);
+    },
+    [explorerContextValue]
+  );
+
   return (
     <DocExplorerContext.Provider value={explorerContextValue}>
       <ViewTitle title={t['All pages']()} />
       <ViewIcon icon="allDocs" />
       <ViewHeader>
-        <AllDocsHeader />
+        <AllDocsHeader
+          displayPreference={displayPreference}
+          onDisplayPreferenceChange={handleDisplayPreferenceChange}
+        />
       </ViewHeader>
       <ViewBody>
         <div className={styles.body}>
@@ -263,7 +307,7 @@ export const AllPage = () => {
           <div className={styles.pinnedCollection}>
             <PinnedCollections
               activeCollectionId={selectedCollectionId}
-              onActiveAll={() => setSelectedCollectionId(null)}
+              onActiveAll={handleSelectAll}
               onActiveCollection={handleSelectCollection}
               onAddFilter={handleNewTempFilter}
               onEditCollection={handleEditCollection}

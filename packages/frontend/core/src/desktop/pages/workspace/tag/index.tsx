@@ -3,6 +3,7 @@ import {
   DocExplorerContext,
 } from '@affine/core/components/explorer/context';
 import { DocsExplorer } from '@affine/core/components/explorer/docs-view/docs-list';
+import type { ExplorerDisplayPreference } from '@affine/core/components/explorer/types';
 import { CollectionRulesService } from '@affine/core/modules/collection-rules';
 import { GlobalContextService } from '@affine/core/modules/global-context';
 import { WorkspacePermissionService } from '@affine/core/modules/permissions';
@@ -15,7 +16,7 @@ import {
   ViewTitle,
 } from '@affine/core/modules/workbench';
 import { useLiveData, useService } from '@toeverything/infra';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { PageNotFound } from '../../404';
@@ -36,6 +37,9 @@ export const TagDetail = ({ tagId }: { tagId?: string }) => {
   const tagList = useService(TagService).tagList;
   const currentTag = useLiveData(tagList.tagByTagId$(tagId));
 
+  const displayPreference = useLiveData(
+    explorerContextValue.displayPreference$
+  );
   const groupBy = useLiveData(explorerContextValue.groupBy$);
   const orderBy = useLiveData(explorerContextValue.orderBy$);
   const groups = useLiveData(explorerContextValue.groups$);
@@ -109,12 +113,23 @@ export const TagDetail = ({ tagId }: { tagId?: string }) => {
     return <PageNotFound />;
   }
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const handleDisplayPreferenceChange = useCallback(
+    (displayPreference: ExplorerDisplayPreference) => {
+      explorerContextValue.displayPreference$.next(displayPreference);
+    },
+    [explorerContextValue]
+  );
+
   return (
     <DocExplorerContext.Provider value={explorerContextValue}>
       <ViewTitle title={tagName ?? 'Untitled'} />
       <ViewIcon icon="tag" />
       <ViewHeader>
-        <TagDetailHeader />
+        <TagDetailHeader
+          displayPreference={displayPreference}
+          onDisplayPreferenceChange={handleDisplayPreferenceChange}
+        />
       </ViewHeader>
       <ViewBody>
         <div className={styles.body}>

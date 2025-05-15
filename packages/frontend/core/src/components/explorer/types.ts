@@ -1,4 +1,3 @@
-import type { FilterParams } from '@affine/core/modules/collection-rules';
 import type {
   GroupByParams,
   OrderByParams,
@@ -6,8 +5,10 @@ import type {
 import type { DocCustomPropertyInfo } from '@affine/core/modules/db';
 import type { DocRecord } from '@affine/core/modules/doc';
 
-export interface ExplorerPreference {
-  filters?: FilterParams[];
+import type { DocListItemView } from './docs-view/doc-list-item';
+
+export interface ExplorerDisplayPreference {
+  view?: DocListItemView;
   groupBy?: GroupByParams;
   orderBy?: OrderByParams;
   displayProperties?: string[];

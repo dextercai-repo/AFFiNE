@@ -1,8 +1,6 @@
 import { RadioGroup, type RadioItem } from '@affine/component';
-import { useLiveData } from '@toeverything/infra';
-import { useCallback, useContext } from 'react';
+import { useCallback } from 'react';
 
-import { DocExplorerContext } from '../context';
 import {
   type DocListItemView,
   DocListViewIcon,
@@ -27,16 +25,18 @@ const views = [
   },
 ] satisfies RadioItem[];
 
-export const ViewToggle = () => {
-  const explorerContextValue = useContext(DocExplorerContext);
-
-  const view = useLiveData(explorerContextValue.view$);
-
+export const ViewToggle = ({
+  view,
+  onViewChange,
+}: {
+  view: DocListItemView;
+  onViewChange: (view: DocListItemView) => void;
+}) => {
   const handleViewChange = useCallback(
     (view: DocListItemView) => {
-      explorerContextValue.view$?.next(view);
+      onViewChange(view);
     },
-    [explorerContextValue.view$]
+    [onViewChange]
   );
 
   return (

@@ -116,6 +116,8 @@ export class CopilotContextDocJob {
 
   @OnEvent('doc.indexer.deleted')
   async deleteDocEmbeddingQueueFromEvent(doc: Events['doc.indexer.deleted']) {
+    if (!this.supportEmbedding) return;
+
     await this.models.copilotContext.deleteWorkspaceEmbedding(
       doc.workspaceId,
       doc.docId

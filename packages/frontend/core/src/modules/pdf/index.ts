@@ -15,5 +15,5 @@ export function configurePDFModule(framework: Framework) {
 
 export { PDF, type PDFRendererState, PDFStatus } from './entities/pdf';
 export { PDFPage } from './entities/pdf-page';
-export { PDFRenderer } from './renderer';
+export { type PDFMeta, PDFRenderer } from './renderer';
 export { PDFService } from './services/pdf';

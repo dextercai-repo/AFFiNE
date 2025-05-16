@@ -37,9 +37,7 @@ export class PDF extends Entity<AttachmentBlockModel> {
   readonly state$ = LiveData.from<PDFRendererState>(
     // @ts-expect-error type alias
     from(downloadBlobToBuffer(this.props)).pipe(
-      switchMap(buffer => {
-        return this.renderer.ob$('open', { data: buffer });
-      }),
+      switchMap(data => this.renderer.ob$('open', { data })),
       map(meta => ({ status: PDFStatus.Opened, meta })),
       // @ts-expect-error type alias
       startWith({ status: PDFStatus.Opening }),

@@ -36,11 +36,15 @@ export const AttachmentViewerView = ({ model }: AttachmentViewerProps) => {
 };
 
 const AttachmentViewerInner = (props: AttachmentViewerBaseProps) => {
-  return props.model.props.type.endsWith('pdf') ? (
-    <AttachmentPreviewErrorBoundary>
-      <PDFViewer {...props} />
-    </AttachmentPreviewErrorBoundary>
-  ) : (
-    <AttachmentFallback {...props} />
-  );
+  const isPDF = props.model.props.type.endsWith('pdf');
+
+  if (isPDF) {
+    return (
+      <AttachmentPreviewErrorBoundary>
+        <PDFViewer {...props} />
+      </AttachmentPreviewErrorBoundary>
+    );
+  }
+
+  return <AttachmentFallback {...props} />;
 };

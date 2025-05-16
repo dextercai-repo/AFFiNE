@@ -1,37 +1,26 @@
-import { IconButton, Menu, toast } from '@affine/component';
-import { useBlockSuiteDocMeta } from '@affine/core/components/hooks/use-block-suite-page-meta';
+import { IconButton, Menu } from '@affine/component';
 import {
   CollectionRulesService,
   type FilterParams,
 } from '@affine/core/modules/collection-rules';
-import { CompatibleFavoriteItemsAdapter } from '@affine/core/modules/favorite';
 import { ShareDocsListService } from '@affine/core/modules/share-doc';
-import { WorkspaceService } from '@affine/core/modules/workspace';
 import { Trans, useI18n } from '@affine/i18n';
-import type { DocMeta } from '@blocksuite/affine/store';
 import { FilterIcon } from '@blocksuite/icons/rc';
 import { useLiveData, useServices } from '@toeverything/infra';
-import {
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { memo, type ReactNode, useCallback, useEffect, useState } from 'react';
 
+import {
+  createDocExplorerContext,
+  DocExplorerContext,
+} from '../../explorer/context';
+import { DocsList } from '../../explorer/docs-view/docs-list';
 import { Filters } from '../../filter';
 import { AddFilterMenu } from '../../filter/add-filter';
-import { AffineShapeIcon, FavoriteTag } from '..';
-import { usePageHeaderColsDef } from '../header-col-def';
-import { PageListItemRenderer } from '../page-group';
-import { ListTableHeader } from '../page-header';
+import { AffineShapeIcon } from '..';
 import { SelectorLayout } from '../selector/selector-layout';
-import type { ListItem } from '../types';
-import { VirtualizedList } from '../virtualized-list';
 import * as styles from './select-page.css';
-import { useSearch } from './use-search';
 
-export const SelectPage = ({
+export const SelectPage = memo(function SelectPage({
   init = [],
   onConfirm,
   onCancel,
@@ -46,87 +35,80 @@ export const SelectPage = ({
   init?: string[];
   onConfirm?: (data: string[]) => void;
   onCancel?: () => void;
-}) => {
+}) {
   const t = useI18n();
-  const [value, setValue] = useState(init);
-  const onChange = useCallback(
-    (value: string[]) => {
-      propsOnChange?.(value);
-      setValue(value);
-    },
-    [propsOnChange]
-  );
-  const confirm = useCallback(() => {
-    onConfirm?.(value);
-  }, [value, onConfirm]);
-  const clearSelected = useCallback(() => {
-    onChange([]);
-  }, [onChange]);
-  const {
-    workspaceService,
-    compatibleFavoriteItemsAdapter,
-    shareDocsListService,
-    collectionRulesService,
-  } = useServices({
+  const [searchText, setSearchText] = useState('');
+
+  const { shareDocsListService, collectionRulesService } = useServices({
     ShareDocsListService,
-    WorkspaceService,
-    CompatibleFavoriteItemsAdapter,
     CollectionRulesService,
   });
-  const workspace = workspaceService.workspace;
-  const docCollection = workspace.docCollection;
-  const pageMetas = useBlockSuiteDocMeta(docCollection);
-  const favourites = useLiveData(compatibleFavoriteItemsAdapter.favorites$);
+  const [docExplorerContextValue] = useState(() => {
+    return createDocExplorerContext({
+      selectMode: true,
+      selectedDocIds: init,
+      displayProperties: ['createdAt', 'updatedAt', 'tags'],
+      quickFavorite: true,
+      showMoreOperation: false,
+      showDragHandle: false,
+    });
+  });
+  const groups = useLiveData(docExplorerContextValue.groups$);
+  const selectedDocIds = useLiveData(docExplorerContextValue.selectedDocIds$);
+  const isEmpty =
+    groups.length === 0 ||
+    (groups.length && groups.every(group => group.items.length === 0));
+
+  const confirm = useCallback(() => {
+    onConfirm?.(docExplorerContextValue.selectedDocIds$.value);
+  }, [onConfirm, docExplorerContextValue.selectedDocIds$]);
+  const clearSelected = useCallback(() => {
+    docExplorerContextValue.selectedDocIds$.next([]);
+  }, [docExplorerContextValue.selectedDocIds$]);
+
+  useEffect(() => {
+    const ob = docExplorerContextValue.selectedDocIds$.subscribe(value => {
+      propsOnChange?.(value);
+    });
+    return () => {
+      ob.unsubscribe();
+    };
+  }, [propsOnChange, docExplorerContextValue.selectedDocIds$]);
 
   useEffect(() => {
     shareDocsListService.shareDocs?.revalidate();
   }, [shareDocsListService.shareDocs]);
 
-  const isFavorite = useCallback(
-    (meta: DocMeta) => favourites.some(fav => fav.id === meta.id),
-    [favourites]
-  );
-
-  const onToggleFavoritePage = useCallback(
-    (page: DocMeta) => {
-      const status = isFavorite(page);
-      compatibleFavoriteItemsAdapter.toggle(page.id, 'doc');
-      toast(
-        status
-          ? t['com.affine.toastMessage.removedFavorites']()
-          : t['com.affine.toastMessage.addedFavorites']()
-      );
-    },
-    [compatibleFavoriteItemsAdapter, isFavorite, t]
-  );
-
-  const pageHeaderColsDef = usePageHeaderColsDef();
   const [filters, setFilters] = useState<FilterParams[]>([]);
 
-  const [filteredDocIds, setFilteredDocIds] = useState<string[]>([]);
-  const filteredPageMetas = useMemo(() => {
-    const idSet = new Set(filteredDocIds);
-    return pageMetas.filter(page => idSet.has(page.id));
-  }, [pageMetas, filteredDocIds]);
-
-  const { searchText, updateSearchText, searchedList } =
-    useSearch(filteredPageMetas);
-
   useEffect(() => {
+    const searchFilter = searchText
+      ? {
+          type: 'system',
+          key: 'title',
+          method: 'match',
+          value: searchText,
+        }
+      : null;
+    const watchFilters: FilterParams[] =
+      filters.length > 0
+        ? filters
+        : [
+            // if no filters are present, match all non-trash documents
+            {
+              type: 'system',
+              key: 'trash',
+              method: 'is',
+              value: 'false',
+            },
+          ];
+
+    if (searchFilter) {
+      watchFilters.push(searchFilter);
+    }
     const subscription = collectionRulesService
       .watch({
-        filters:
-          filters.length > 0
-            ? filters
-            : [
-                // if no filters are present, match all non-trash documents
-                {
-                  type: 'system',
-                  key: 'trash',
-                  method: 'is',
-                  value: 'false',
-                },
-              ],
+        filters: watchFilters,
         extraFilters: [
           {
             type: 'system',
@@ -143,40 +125,23 @@ export const SelectPage = ({
         ],
       })
       .subscribe(result => {
-        setFilteredDocIds(result.groups.flatMap(group => group.items));
+        docExplorerContextValue.groups$.next(result.groups);
       });
     return () => {
       subscription.unsubscribe();
     };
-  }, [collectionRulesService, filters]);
-
-  const operationsRenderer = useCallback(
-    (item: ListItem) => {
-      const page = item as DocMeta;
-      return (
-        <FavoriteTag
-          style={{ marginRight: 8 }}
-          onClick={() => onToggleFavoritePage(page)}
-          active={isFavorite(page)}
-        />
-      );
-    },
-    [isFavorite, onToggleFavoritePage]
-  );
-
-  const pageHeaderRenderer = useCallback(() => {
-    return <ListTableHeader headerCols={pageHeaderColsDef} />;
-  }, [pageHeaderColsDef]);
-
-  const pageItemRenderer = useCallback((item: ListItem) => {
-    return <PageListItemRenderer {...item} />;
-  }, []);
+  }, [
+    collectionRulesService,
+    docExplorerContextValue.groups$,
+    filters,
+    searchText,
+  ]);
 
   return (
     <SelectorLayout
       searchPlaceholder={t['com.affine.editCollection.search.placeholder']()}
-      selectedCount={value.length}
-      onSearch={updateSearchText}
+      selectedCount={selectedDocIds.length}
+      onSearch={setSearchText}
       onClear={clearSelected}
       onCancel={onCancel}
       onConfirm={confirm}
@@ -206,25 +171,17 @@ export const SelectPage = ({
             <Filters filters={filters} onChange={setFilters} />
           </div>
         ) : null}
-        {searchedList.length ? (
-          <VirtualizedList
-            className={styles.pageList}
-            items={searchedList}
-            docCollection={docCollection}
-            selectable
-            onSelectedIdsChange={onChange}
-            selectedIds={value}
-            operationsRenderer={operationsRenderer}
-            itemRenderer={pageItemRenderer}
-            headerRenderer={pageHeaderRenderer}
-          />
+        {!isEmpty ? (
+          <DocExplorerContext.Provider value={docExplorerContextValue}>
+            <DocsList disableMultiDelete />
+          </DocExplorerContext.Provider>
         ) : (
           <EmptyList search={searchText} />
         )}
       </div>
     </SelectorLayout>
   );
-};
+});
 export const EmptyList = ({ search }: { search?: string }) => {
   const t = useI18n();
   return (

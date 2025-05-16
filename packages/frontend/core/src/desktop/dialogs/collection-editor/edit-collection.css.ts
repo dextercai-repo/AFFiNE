@@ -1,4 +1,5 @@
 import { cssVar } from '@toeverything/theme';
+import { cssVarV2 } from '@toeverything/theme/v2';
 import { style } from '@vanilla-extract/css';
 export const ellipsis = style({
   overflow: 'hidden',
@@ -14,22 +15,25 @@ export const rulesBottom = style({
   display: 'flex',
   justifyContent: 'space-between',
   padding: '20px 24px',
-  borderTop: `1px solid ${cssVar('borderColor')}`,
+  borderTop: `1px solid ${cssVarV2.layer.insideBorder.border}`,
   flexWrap: 'wrap',
   gap: '12px',
+});
+export const includeListGroup = style({
+  borderTop: `1px solid ${cssVarV2.layer.insideBorder.border}`,
 });
 export const includeListTitle = style({
   fontSize: 14,
   fontWeight: 400,
   lineHeight: '22px',
   color: cssVar('textSecondaryColor'),
-  padding: '4px 16px',
-  borderTop: `1px solid ${cssVar('borderColor')}`,
+  padding: '8px',
+  paddingBottom: 0,
 });
 export const rulesContainerRight = style({
   flex: 2,
   flexDirection: 'column',
-  borderLeft: `1px solid ${cssVar('borderColor')}`,
+  borderLeft: `1px solid ${cssVarV2.layer.insideBorder.border}`,
   overflowX: 'hidden',
   overflowY: 'auto',
 });
@@ -60,7 +64,7 @@ export const includeItem = style({
   overflow: 'hidden',
   gap: 16,
   whiteSpace: 'nowrap',
-  border: `1px solid ${cssVar('borderColor')}`,
+  border: `1px solid ${cssVarV2.layer.insideBorder.border}`,
   borderRadius: 8,
   padding: '4px 8px 4px',
 });
@@ -143,5 +147,5 @@ export const rulesTitle = style({
   fontSize: 20,
   lineHeight: '24px',
   color: cssVar('textSecondaryColor'),
-  borderBottom: `1px solid ${cssVar('borderColor')}`,
+  borderBottom: `1px solid ${cssVarV2.layer.insideBorder.border}`,
 });

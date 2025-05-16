@@ -10,6 +10,7 @@ import type {
 import { forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { useAutoFocus, useAutoSelect } from '../../hooks';
+import { useDebounceCallback } from '../../hooks/use-debounce-callback';
 
 export type RowInputProps = {
   disabled?: boolean;
@@ -21,6 +22,7 @@ export type RowInputProps = {
   style?: CSSProperties;
   onEnter?: (value: string) => void;
   [key: `data-${string}`]: string;
+  debounce?: number;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'size' | 'onBlur'>;
 
 // RowInput component that is used in the selector layout for search input
@@ -37,6 +39,7 @@ export const RowInput = forwardRef<HTMLInputElement, RowInputProps>(
       onBlur,
       autoFocus,
       autoSelect,
+      debounce,
       ...otherProps
     }: RowInputProps,
     upstreamRef: ForwardedRef<HTMLInputElement>
@@ -66,7 +69,7 @@ export const RowInput = forwardRef<HTMLInputElement, RowInputProps>(
       if (!onBlur) return;
       selectRef.current?.addEventListener('blur', onBlur as any);
       return () => {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // oxlint-disable-next-line react-hooks/exhaustive-deps
         selectRef.current?.removeEventListener('blur', onBlur as any);
       };
     }, [onBlur, selectRef]);
@@ -77,6 +80,7 @@ export const RowInput = forwardRef<HTMLInputElement, RowInputProps>(
       },
       [propsOnChange]
     );
+    const debounceHandleChange = useDebounceCallback(handleChange, debounce);
 
     const handleKeyDown = useCallback(
       (e: KeyboardEvent<HTMLInputElement>) => {
@@ -105,7 +109,7 @@ export const RowInput = forwardRef<HTMLInputElement, RowInputProps>(
         ref={inputRef}
         disabled={disabled}
         style={style}
-        onChange={handleChange}
+        onChange={debounceHandleChange}
         onKeyDown={handleKeyDown}
         onCompositionStart={handleCompositionStart}
         onCompositionEnd={handleCompositionEnd}

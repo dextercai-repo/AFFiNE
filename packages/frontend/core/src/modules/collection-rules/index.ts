@@ -1,6 +1,7 @@
 import type { Framework } from '@toeverything/infra';
 
 import { DocsService } from '../doc';
+import { DocsSearchService } from '../docs-search';
 import { FavoriteService } from '../favorite';
 import { ShareDocsListService } from '../share-doc';
 import { TagService } from '../tag';
@@ -19,6 +20,7 @@ import { SharedFilterProvider } from './impls/filters/shared';
 import { SystemFilterProvider } from './impls/filters/system';
 import { TagsFilterProvider } from './impls/filters/tags';
 import { TextPropertyFilterProvider } from './impls/filters/text';
+import { TitleFilterProvider } from './impls/filters/title';
 import { TrashFilterProvider } from './impls/filters/trash';
 import { UpdatedAtFilterProvider } from './impls/filters/updated-at';
 import { UpdatedByFilterProvider } from './impls/filters/updated-by';
@@ -129,6 +131,9 @@ export function configureCollectionRulesModule(framework: Framework) {
     .impl(FilterProvider('system:shared'), SharedFilterProvider, [
       ShareDocsListService,
       DocsService,
+    ])
+    .impl(FilterProvider('system:title'), TitleFilterProvider, [
+      DocsSearchService,
     ])
     // --------------- Group By ---------------
     .impl(GroupByProvider('system'), SystemGroupByProvider)

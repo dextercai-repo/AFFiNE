@@ -75,6 +75,9 @@ export const listIcon = style({
   height: 24,
   fontSize: 24,
   color: cssVarV2.icon.primary,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
 });
 export const listContent = style({
   width: 0,

@@ -67,7 +67,7 @@ const calcCardHeightById = (id: string) => {
   return 250 + value * 10;
 };
 
-const DocListItemComponent = memo(function DocListItemComponent({
+export const DocListItemComponent = memo(function DocListItemComponent({
   itemId,
   groupId,
 }: {
@@ -202,22 +202,24 @@ export const DocsExplorer = ({
           []
         )}
       />
-      <ListFloatingToolbar
-        open={!!selectMode}
-        onDelete={handleMultiDelete}
-        onClose={handleCloseFloatingToolbar}
-        content={
-          <Trans
-            i18nKey="com.affine.page.toolbar.selected"
-            count={selectedDocIds.length}
-          >
-            <div style={{ color: cssVarV2.text.secondary }}>
-              {{ count: selectedDocIds.length } as any}
-            </div>
-            selected
-          </Trans>
-        }
-      />
+      {!disableMultiDelete ? (
+        <ListFloatingToolbar
+          open={!!selectMode}
+          onDelete={handleMultiDelete}
+          onClose={handleCloseFloatingToolbar}
+          content={
+            <Trans
+              i18nKey="com.affine.page.toolbar.selected"
+              count={selectedDocIds.length}
+            >
+              <div style={{ color: cssVarV2.text.secondary }}>
+                {{ count: selectedDocIds.length } as any}
+              </div>
+              selected
+            </Trans>
+          }
+        />
+      ) : null}
     </>
   );
 };

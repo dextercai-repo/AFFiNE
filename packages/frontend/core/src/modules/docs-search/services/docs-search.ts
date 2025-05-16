@@ -26,6 +26,29 @@ export class DocsSearchService extends Service {
     errorMessage: null,
   } as IndexerSyncState);
 
+  searchTitle$(query: string) {
+    return this.indexer
+      .search$(
+        'doc',
+        {
+          type: 'match',
+          field: 'title',
+          match: query,
+        },
+        {
+          pagination: {
+            skip: 0,
+            limit: Infinity,
+          },
+        }
+      )
+      .pipe(
+        map(({ nodes }) => {
+          return nodes.map(node => node.id);
+        })
+      );
+  }
+
   search$(query: string): Observable<
     {
       docId: string;

@@ -193,6 +193,7 @@ const DragHandle = memo(function DragHandle({
 }: HTMLProps<HTMLDivElement> & { preview?: ReactNode }) {
   const contextValue = useContext(DocExplorerContext);
   const selectMode = useLiveData(contextValue.selectMode$);
+  const showDragHandle = useLiveData(contextValue.showDragHandle$);
 
   const { dragRef, CustomDragPreview } = useDraggable<AffineDNDData>(
     () => ({
@@ -210,7 +211,7 @@ const DragHandle = memo(function DragHandle({
     [id]
   );
 
-  if (selectMode || !id) {
+  if (selectMode || !id || !showDragHandle) {
     return null;
   }
 

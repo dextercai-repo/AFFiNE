@@ -21,10 +21,11 @@ import {
   SplitViewIcon,
 } from '@blocksuite/icons/rc';
 import { useLiveData, useService } from '@toeverything/infra';
-import { useCallback } from 'react';
+import { useCallback, useContext } from 'react';
 
 import { useBlockSuiteMetaHelper } from '../../hooks/affine/use-block-suite-meta-helper';
 import { IsFavoriteIcon } from '../../pure/icons';
+import { DocExplorerContext } from '../context';
 
 interface DocOperationProps {
   docId: string;
@@ -203,6 +204,13 @@ export const MoreMenuButton = ({
   docId: string;
   iconProps?: IconButtonProps;
 }) => {
+  const contextValue = useContext(DocExplorerContext);
+  const showMoreOperation = useLiveData(contextValue.showMoreOperation$);
+
+  if (!showMoreOperation) {
+    return null;
+  }
+
   return (
     <MoreMenu docId={docId} {...menuProps}>
       <IconButton icon={<MoreVerticalIcon />} {...iconProps} />

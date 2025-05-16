@@ -13,6 +13,8 @@ export interface ExplorerPreference {
   displayProperties?: string[];
   showDocIcon?: boolean;
   showDocPreview?: boolean;
+  showMoreOperation?: boolean;
+  showDragHandle?: boolean;
   quickFavorite?: boolean;
   quickTrash?: boolean;
   quickSplit?: boolean;

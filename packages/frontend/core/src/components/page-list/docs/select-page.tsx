@@ -13,7 +13,7 @@ import {
   createDocExplorerContext,
   DocExplorerContext,
 } from '../../explorer/context';
-import { DocsList } from '../../explorer/docs-view/docs-list';
+import { DocsExplorer } from '../../explorer/docs-view/docs-list';
 import { Filters } from '../../filter';
 import { AddFilterMenu } from '../../filter/add-filter';
 import { AffineShapeIcon } from '..';
@@ -173,7 +173,7 @@ export const SelectPage = memo(function SelectPage({
         ) : null}
         {!isEmpty ? (
           <DocExplorerContext.Provider value={docExplorerContextValue}>
-            <DocsList disableMultiDelete />
+            <DocsExplorer disableMultiDelete />
           </DocExplorerContext.Provider>
         ) : (
           <EmptyList search={searchText} />

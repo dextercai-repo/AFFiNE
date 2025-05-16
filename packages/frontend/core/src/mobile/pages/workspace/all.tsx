@@ -4,7 +4,7 @@ import {
   createDocExplorerContext,
   DocExplorerContext,
 } from '@affine/core/components/explorer/context';
-import { DocsList } from '@affine/core/components/explorer/docs-view/docs-list';
+import { DocsExplorer } from '@affine/core/components/explorer/docs-view/docs-list';
 import { CollectionRulesService } from '@affine/core/modules/collection-rules';
 import { useLiveData, useService } from '@toeverything/infra';
 import { useEffect, useState } from 'react';
@@ -68,7 +68,11 @@ const AllDocs = () => {
 
   return (
     <DocExplorerContext.Provider value={explorerContextValue}>
-      <DocsList masonryItemWidthMin={150} heightBase={180} heightScale={12} />
+      <DocsExplorer
+        masonryItemWidthMin={150}
+        heightBase={180}
+        heightScale={12}
+      />
     </DocExplorerContext.Provider>
   );
 };

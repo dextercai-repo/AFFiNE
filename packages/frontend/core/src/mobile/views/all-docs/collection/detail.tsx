@@ -7,7 +7,7 @@ import {
   createDocExplorerContext,
   DocExplorerContext,
 } from '@affine/core/components/explorer/context';
-import { DocsList } from '@affine/core/components/explorer/docs-view/docs-list';
+import { DocsExplorer } from '@affine/core/components/explorer/docs-view/docs-list';
 import { PageHeader } from '@affine/core/mobile/components';
 import { Page } from '@affine/core/mobile/components/page';
 import type { Collection } from '@affine/core/modules/collection';
@@ -69,7 +69,11 @@ const CollectionDocs = ({ collection }: { collection: Collection }) => {
 
   return (
     <DocExplorerContext.Provider value={explorerContextValue}>
-      <DocsList masonryItemWidthMin={150} heightBase={180} heightScale={12} />
+      <DocsExplorer
+        masonryItemWidthMin={150}
+        heightBase={180}
+        heightScale={12}
+      />
     </DocExplorerContext.Provider>
   );
 };

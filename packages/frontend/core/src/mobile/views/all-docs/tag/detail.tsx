@@ -4,7 +4,7 @@ import {
   createDocExplorerContext,
   DocExplorerContext,
 } from '@affine/core/components/explorer/context';
-import { DocsList } from '@affine/core/components/explorer/docs-view/docs-list';
+import { DocsExplorer } from '@affine/core/components/explorer/docs-view/docs-list';
 import { Page } from '@affine/core/mobile/components/page';
 import { CollectionRulesService } from '@affine/core/modules/collection-rules';
 import type { Tag } from '@affine/core/modules/tag';
@@ -75,7 +75,11 @@ const TagDocs = ({ tag }: { tag: Tag }) => {
 
   return (
     <DocExplorerContext.Provider value={explorerContextValue}>
-      <DocsList masonryItemWidthMin={150} heightBase={180} heightScale={12} />
+      <DocsExplorer
+        masonryItemWidthMin={150}
+        heightBase={180}
+        heightScale={12}
+      />
     </DocExplorerContext.Provider>
   );
 };

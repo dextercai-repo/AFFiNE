@@ -23,6 +23,7 @@ export const attachmentItem = css({
   alignItems: 'center',
   padding: '4px',
   gap: '4px',
+  color: cssVar('textPrimaryColor'),
   border: `0.5px solid ${cssVar('borderColor')}`,
   borderRadius: '4px',
   flex: 'none',
@@ -33,10 +34,14 @@ export const attachmentItem = css({
 export const attachmentTitle = css({
   fontSize: '14px',
   fontWeight: 400,
-  color: cssVar('textPrimaryColor'),
   display: 'flex',
   alignItems: 'center',
   gap: '4px',
+});
+
+export const attachmentError = css({
+  color: cssVarV2('status/error'),
+  backgroundColor: cssVarV2('layer/background/error'),
 });
 
 export const attachmentOperation = css({

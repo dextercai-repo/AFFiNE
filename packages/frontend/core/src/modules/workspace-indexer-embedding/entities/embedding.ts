@@ -11,12 +11,23 @@ import {
   onStart,
   smartRetry,
 } from '@toeverything/infra';
-import { EMPTY } from 'rxjs';
-import { concatMap, exhaustMap, mergeMap } from 'rxjs/operators';
+import { EMPTY, of } from 'rxjs';
+import {
+  concatMap,
+  exhaustMap,
+  mergeMap,
+  switchMap,
+  tap,
+} from 'rxjs/operators';
 
 import { COUNT_PER_PAGE } from '../constants';
 import type { EmbeddingStore } from '../stores/embedding';
-import type { AttachmentFile, IgnoredDoc } from '../types';
+import type {
+  AttachmentFile,
+  IgnoredDoc,
+  LocalAttachmentFile,
+  PersistedAttachmentFile,
+} from '../types';
 
 export interface EmbeddingConfig {
   enabled: boolean;
@@ -29,7 +40,7 @@ interface Attachments {
     hasNextPage: boolean;
   };
   edges: {
-    node: AttachmentFile;
+    node: PersistedAttachmentFile;
   }[];
 }
 
@@ -50,6 +61,8 @@ export class Embedding extends Entity {
   isEnabledLoading$ = new LiveData(false);
   isAttachmentsLoading$ = new LiveData(false);
   isIgnoredDocsLoading$ = new LiveData(false);
+  uploadingAttachments$ = new LiveData<LocalAttachmentFile[]>([]);
+  mergedAttachments$ = new LiveData<AttachmentFile[]>([]);
 
   constructor(
     private readonly workspaceService: WorkspaceService,
@@ -59,6 +72,15 @@ export class Embedding extends Entity {
     this.getEnabled();
     this.getAttachments({ first: COUNT_PER_PAGE, after: null });
     this.getIgnoredDocs();
+    this.uploadingAttachments$.subscribe(() => this.updateMergedAttachments());
+    this.attachments$.subscribe(() => this.updateMergedAttachments());
+    this.updateMergedAttachments();
+  }
+
+  private updateMergedAttachments() {
+    const uploading = this.uploadingAttachments$.value;
+    const uploaded = this.attachments$.value.edges.map(edge => edge.node);
+    this.mergedAttachments$.next([...uploading, ...uploaded].slice(0, 10));
   }
 
   getEnabled = effect(
@@ -167,7 +189,17 @@ export class Embedding extends Entity {
       ).pipe(
         smartRetry(),
         mergeMap(value => {
-          this.attachments$.next(value);
+          const patched = {
+            ...value,
+            edges: value.edges.map(edge => ({
+              ...edge,
+              node: {
+                ...edge.node,
+                status: 'uploaded' as const,
+              },
+            })),
+          };
+          this.attachments$.next(patched);
           return EMPTY;
         }),
         catchErrorInto(this.error$, error => {
@@ -183,19 +215,54 @@ export class Embedding extends Entity {
   );
 
   addAttachments = effect(
-    exhaustMap((files: File[]) => {
-      return fromPromise(signal =>
-        this.store.addEmbeddingFiles(
-          this.workspaceService.workspace.id,
-          files,
-          signal
-        )
-      ).pipe(
-        concatMap(() => {
+    // Support parallel upload
+    mergeMap((files: File[]) => {
+      const generateLocalId = () =>
+        Math.random().toString(36).slice(2) + Date.now();
+      const localAttachments: LocalAttachmentFile[] = files.map(file => ({
+        localId: generateLocalId(),
+        fileName: file.name,
+        mimeType: file.type,
+        size: file.size,
+        createdAt: file.lastModified,
+        status: 'uploading',
+      }));
+
+      return of({ files, localAttachments }).pipe(
+        // Refresh uploading attachments immediately
+        tap(({ localAttachments }) => {
+          this.uploadingAttachments$.next([
+            ...localAttachments,
+            ...this.uploadingAttachments$.value,
+          ]);
+        }),
+        // Uploading embedding files
+        switchMap(({ files }) => {
+          return fromPromise(signal =>
+            this.store.addEmbeddingFiles(
+              this.workspaceService.workspace.id,
+              files,
+              signal
+            )
+          );
+        }),
+        // Refresh uploading attachments
+        tap(() => {
+          this.uploadingAttachments$.next(
+            this.uploadingAttachments$.value.filter(
+              att => !localAttachments.some(l => l.localId === att.localId)
+            )
+          );
           this.getAttachments({ first: COUNT_PER_PAGE, after: null });
-          return EMPTY;
         }),
         catchErrorInto(this.error$, error => {
+          this.uploadingAttachments$.next(
+            this.uploadingAttachments$.value.map(att =>
+              localAttachments.some(l => l.localId === att.localId)
+                ? { ...att, status: 'error', errorMessage: String(error) }
+                : att
+            )
+          );
           logger.error(
             'Failed to add workspace doc embedding attachments',
             error
@@ -207,6 +274,15 @@ export class Embedding extends Entity {
 
   removeAttachment = effect(
     exhaustMap((id: string) => {
+      const localIndex = this.uploadingAttachments$.value.findIndex(
+        att => att.localId === id
+      );
+      if (localIndex !== -1) {
+        this.uploadingAttachments$.next(
+          this.uploadingAttachments$.value.filter(att => att.localId !== id)
+        );
+        return EMPTY;
+      }
       return fromPromise(signal =>
         this.store.removeEmbeddingFile(
           this.workspaceService.workspace.id,

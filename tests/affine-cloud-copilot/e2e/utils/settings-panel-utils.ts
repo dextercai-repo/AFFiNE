@@ -89,23 +89,35 @@ export class SettingsPanelUtils {
 
     while (count > 0) {
       const attachmentItem = await page.getByTestId(itemId).first();
+      const hasErrorItem = await attachmentItem
+        .getByTestId('workspace-embedding-setting-attachment-error-item')
+        .isVisible();
       await attachmentItem
         .getByTestId('workspace-embedding-setting-attachment-delete-button')
         .click();
-      await page.getByTestId('confirm-modal-confirm').click();
+
+      if (!hasErrorItem) {
+        await page.getByTestId('confirm-modal-confirm').click();
+      }
       await page.waitForTimeout(1000);
       count = await page.getByTestId(itemId).count();
     }
   }
 
-  public static async removeAttachment(page: Page, attachment: string) {
+  public static async removeAttachment(
+    page: Page,
+    attachment: string,
+    shouldConfirm = true
+  ) {
     const attachmentItem = await page
       .getByTestId('workspace-embedding-setting-attachment-item')
       .filter({ hasText: attachment });
     await attachmentItem
       .getByTestId('workspace-embedding-setting-attachment-delete-button')
       .click();
-    await page.getByTestId('confirm-modal-confirm').click();
+    if (shouldConfirm) {
+      await page.getByTestId('confirm-modal-confirm').click();
+    }
     await page
       .getByTestId('workspace-embedding-setting-attachment-item')
       .filter({ hasText: attachment })

@@ -64,14 +64,41 @@ test.describe('AISettings/Embedding', () => {
         buffer: buffer2,
       },
     ];
+
+    const client = await page.context().newCDPSession(page);
+    await client.send('Network.enable');
+    await client.send('Network.emulateNetworkConditions', {
+      offline: false,
+      latency: 1000,
+      downloadThroughput: (50 * 1024) / 8,
+      uploadThroughput: (50 * 1024) / 8,
+      connectionType: 'cellular3g',
+    });
+
     await utils.settings.uploadWorkspaceEmbedding(page, attachments);
 
     const attachmentList = await page.getByTestId(
       'workspace-embedding-setting-attachment-list'
     );
+
+    // Uploading
+    await expect(
+      attachmentList.getByTestId(
+        'workspace-embedding-setting-attachment-uploading-item'
+      )
+    ).toHaveCount(2);
+
+    // Persisted
     await expect(
       attachmentList.getByTestId('workspace-embedding-setting-attachment-item')
     ).toHaveCount(2);
+
+    await client.send('Network.emulateNetworkConditions', {
+      offline: false,
+      latency: 0,
+      downloadThroughput: -1,
+      uploadThroughput: -1,
+    });
 
     await utils.settings.closeSettingsPanel(page);
 
@@ -100,6 +127,36 @@ test.describe('AISettings/Embedding', () => {
       expect(content).toMatch(/WorkspaceEBFFF.*dog/);
       expect(await message.locator('affine-footnote-node').count()).toBe(2);
     }).toPass({ timeout: 20000 });
+  });
+
+  test('should display failed info if upload attachment failed', async ({
+    loggedInPage: page,
+    utils,
+  }) => {
+    await utils.settings.enableWorkspaceEmbedding(page);
+    const attachments = [
+      {
+        name: 'document1.txt',
+        mimeType: 'text/plain',
+        buffer: Buffer.from('HelloWorld'),
+      },
+    ];
+
+    await page.context().setOffline(true);
+
+    await utils.settings.uploadWorkspaceEmbedding(page, attachments);
+
+    const attachmentList = await page.getByTestId(
+      'workspace-embedding-setting-attachment-list'
+    );
+
+    const errorItem = await attachmentList.getByTestId(
+      'workspace-embedding-setting-attachment-error-item'
+    );
+    await errorItem.hover();
+    await expect(page.getByText(/Network error/i)).toBeVisible();
+
+    await page.context().setOffline(false);
   });
 
   test('should support hybrid search for both globally uploaded attachments and those uploaded in the current session', async ({
@@ -198,7 +255,7 @@ test.describe('AISettings/Embedding', () => {
     ).toHaveText('document1.txt');
   });
 
-  test('should support remove attachment', async ({
+  test('should support remove attachment with confirm', async ({
     loggedInPage: page,
     utils,
   }) => {
@@ -220,6 +277,25 @@ test.describe('AISettings/Embedding', () => {
       attachmentList.getByTestId('workspace-embedding-setting-attachment-item')
     ).toHaveCount(1);
     await utils.settings.removeAttachment(page, 'document1.txt');
+  });
+
+  test('should support remove error attachment directly', async ({
+    loggedInPage: page,
+    utils,
+  }) => {
+    await utils.settings.enableWorkspaceEmbedding(page);
+    const textContent = 'WorkspaceEBEEE is a cute cat';
+    const attachments = [
+      {
+        name: 'document1.txt',
+        mimeType: 'text/plain',
+        buffer: Buffer.from(textContent),
+      },
+    ];
+    await page.context().setOffline(true);
+    await utils.settings.uploadWorkspaceEmbedding(page, attachments);
+    await utils.settings.removeAttachment(page, 'document1.txt', false);
+    await page.context().setOffline(false);
   });
 
   // FIXME: wait for indexer

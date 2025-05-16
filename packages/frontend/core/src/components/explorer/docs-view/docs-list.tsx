@@ -88,6 +88,7 @@ export const DocsExplorer = ({
   const contextValue = useContext(DocExplorerContext);
   const docsService = useService(DocsService);
 
+  const groupBy = useLiveData(contextValue.groupBy$);
   const groups = useLiveData(contextValue.groups$);
   const view = useLiveData(contextValue.view$);
   const selectMode = useLiveData(contextValue.selectMode$);
@@ -100,8 +101,8 @@ export const DocsExplorer = ({
     const items = groups.map((group: any) => {
       return {
         id: group.key,
-        Component: groups.length > 1 ? GroupHeader : undefined,
-        height: groups.length > 1 ? 24 : 0,
+        Component: groupBy ? GroupHeader : undefined,
+        height: groupBy ? 24 : 0,
         className: styles.groupHeader,
         items: group.items.map((docId: string) => {
           return {
@@ -120,7 +121,7 @@ export const DocsExplorer = ({
       } satisfies MasonryGroup;
     });
     return items;
-  }, [groups, view]);
+  }, [groupBy, groups, view]);
 
   const handleCloseFloatingToolbar = useCallback(() => {
     contextValue.selectMode$?.next(false);

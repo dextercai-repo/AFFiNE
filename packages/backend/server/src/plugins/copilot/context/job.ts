@@ -4,6 +4,7 @@ import {
   AFFiNELogger,
   BlobNotFound,
   Config,
+  DocNotFound,
   EventBus,
   JobQueue,
   mapAnyError,
@@ -87,11 +88,24 @@ export class CopilotContextDocJob {
     }
   }
 
-  // @OnEvent('doc.indexer.updated')
-  async addDocEmbeddingQueueFromEvent(
-    // TODO(@darkskygit): replace this with real event type
-    doc: { workspaceId: string; docId: string } //Events['doc.indexer.updated'],
-  ) {
+  @OnEvent('workspace.embedding')
+  async addWorkspaceEmbeddingQueue({
+    workspaceId,
+  }: Events['workspace.embedding']) {
+    if (!this.supportEmbedding) return;
+
+    const toBeEmbedDocIds =
+      await this.models.copilotWorkspace.findDocsToEmbed(workspaceId);
+    for (const docId of toBeEmbedDocIds) {
+      await this.queue.add('copilot.embedding.docs', {
+        workspaceId,
+        docId,
+      });
+    }
+  }
+
+  @OnEvent('doc.indexer.updated')
+  async addDocEmbeddingQueueFromEvent(doc: Events['doc.indexer.updated']) {
     if (!this.supportEmbedding) return;
 
     await this.queue.add('copilot.embedding.docs', {
@@ -100,11 +114,8 @@ export class CopilotContextDocJob {
     });
   }
 
-  // @OnEvent('doc.indexer.deleted')
-  async deleteDocEmbeddingQueueFromEvent(
-    // TODO(@darkskygit): replace this with real event type
-    doc: { workspaceId: string; docId: string } //Events['doc.indexer.deleted'],
-  ) {
+  @OnEvent('doc.indexer.deleted')
+  async deleteDocEmbeddingQueueFromEvent(doc: Events['doc.indexer.deleted']) {
     await this.models.copilotContext.deleteWorkspaceEmbedding(
       doc.workspaceId,
       doc.docId
@@ -209,6 +220,8 @@ export class CopilotContextDocJob {
             chunks
           );
         }
+      } else if (contextId) {
+        throw new DocNotFound({ spaceId: workspaceId, docId });
       }
     } catch (error: any) {
       if (contextId) {

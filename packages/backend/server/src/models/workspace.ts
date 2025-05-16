@@ -58,6 +58,13 @@ export class WorkspaceModel extends BaseModel {
     this.logger.debug(
       `Updated workspace ${workspaceId} with data ${JSON.stringify(data)}`
     );
+
+    if (workspace.enableDocEmbedding) {
+      // trigger workspace embedding
+      this.event.emit('workspace.embedding', {
+        workspaceId: workspace.id,
+      });
+    }
     return workspace;
   }
 

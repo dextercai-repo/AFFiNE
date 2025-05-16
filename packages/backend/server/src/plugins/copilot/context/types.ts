@@ -8,6 +8,10 @@ import { parseDoc } from '../../../native';
 
 declare global {
   interface Events {
+    'workspace.embedding': {
+      workspaceId: string;
+    };
+
     'workspace.doc.embedding': Array<{
       workspaceId: string;
       docId: string;

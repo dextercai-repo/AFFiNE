@@ -43,7 +43,6 @@ export type WorkspacePropertyTypes = {
   pageWidth: { filter: never };
   template: { filter: never };
   unknown: { filter: never };
-  title: { filter: 'match' };
 };
 export type WorkspacePropertyType = keyof WorkspacePropertyTypes;
 

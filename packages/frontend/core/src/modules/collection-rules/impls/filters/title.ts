@@ -1,5 +1,4 @@
 import type { DocsSearchService } from '@affine/core/modules/docs-search';
-import type { WorkspacePropertyFilter } from '@affine/core/modules/workspace-property';
 import { Service } from '@toeverything/infra';
 import { map, type Observable } from 'rxjs';
 
@@ -12,7 +11,7 @@ export class TitleFilterProvider extends Service implements FilterProvider {
   }
 
   filter$(params: FilterParams): Observable<Set<string>> {
-    const method = params.method as WorkspacePropertyFilter<'title'>;
+    const method = params.method as 'match';
 
     if (method === 'match') {
       return this.docsSearchService

@@ -20,8 +20,7 @@ checksum = "512761e0bb2578dd7380c6baaa0f4ce03e84f95e960231d1dec8bf4d7d6e2627"
 [[package]]
 name = "adobe-cmap-parser"
 version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae8abfa9a4688de8fc9f42b3f013b6fffec18ed8a554f5f113577e0b9b3212a3"
+source = "git+https://github.com/darkskygit/adobe-cmap-parser#610513ae6035c63eab69f33299b86c43693cabb4"
 dependencies = [
  "pom",
 ]
@@ -2737,9 +2736,9 @@ dependencies = [
 
 [[package]]
 name = "path-ext"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0de7a86239a8b87b5094977b64893fcf0ed768072744dd4ee0df237686b2d815"
+checksum = "7603010004b5cdecf8006605bf7b6f07b0e59d3003010f52b767e91bf2582a45"
 dependencies = [
  "path-slash",
  "walkdir",
@@ -2754,7 +2753,7 @@ checksum = "1e91099d4268b0e11973f036e885d652fb0b21fedcf69738c627f94db6a44f42"
 [[package]]
 name = "pdf-extract"
 version = "0.8.2"
-source = "git+https://github.com/toeverything/pdf-extract?branch=darksky%2Fimprove-font-decoding#e74beed894e1b8dc228c2bf078ed92814b27759f"
+source = "git+https://github.com/toeverything/pdf-extract?branch=darksky%2Fimprove-font-decoding#040751a61aba51e7a28217b758c18db4415c3ee4"
 dependencies = [
  "adobe-cmap-parser",
  "cff-parser",
@@ -2763,6 +2762,7 @@ dependencies = [
  "log",
  "lopdf",
  "postscript",
+ "rust-embed",
  "type1-encoding-parser",
  "unicode-normalization",
 ]
@@ -2943,9 +2943,12 @@ checksum = "60f6ce597ecdcc9a098e7fddacb1065093a3d66446fa16c675e7e71d1b5c28e6"
 
 [[package]]
 name = "postscript"
-version = "0.14.1"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "78451badbdaebaf17f053fd9152b3ffb33b516104eacb45e7864aaa9c712f306"
+checksum = "9a2238e788cf2c9b6edc23b83cf8ccdd4a6380cc9bf0598cc220fac42a55def6"
+dependencies = [
+ "typeface",
+]
 
 [[package]]
 name = "potential_utf"
@@ -3331,6 +3334,40 @@ dependencies = [
  "num-integer",
  "num-traits",
  "realfft",
+]
+
+[[package]]
+name = "rust-embed"
+version = "8.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "025908b8682a26ba8d12f6f2d66b987584a4a87bc024abc5bbc12553a8cd178a"
+dependencies = [
+ "rust-embed-impl",
+ "rust-embed-utils",
+ "walkdir",
+]
+
+[[package]]
+name = "rust-embed-impl"
+version = "8.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6065f1a4392b71819ec1ea1df1120673418bf386f50de1d6f54204d836d4349c"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "rust-embed-utils",
+ "syn 2.0.101",
+ "walkdir",
+]
+
+[[package]]
+name = "rust-embed-utils"
+version = "8.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6cc0c81648b20b70c491ff8cce00c1c3b223bb8ed2b5d41f0e54c6c4c0a3594"
+dependencies = [
+ "sha2",
+ "walkdir",
 ]
 
 [[package]]
@@ -4669,6 +4706,12 @@ checksum = "d3d6cc09e1a99c7e01f2afe4953789311a1c50baebbdac5b477ecf78e2e92a5b"
 dependencies = [
  "pom",
 ]
+
+[[package]]
+name = "typeface"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4f6b49e025f4dc953a29b83e4f5a905089117d09fa53491015d7678951b8be1"
 
 [[package]]
 name = "typenum"

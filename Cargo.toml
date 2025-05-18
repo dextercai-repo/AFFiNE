@@ -57,7 +57,7 @@ objc2-foundation       = "0.3"
 once_cell              = "1"
 ordered-float          = "5"
 parking_lot            = "0.12"
-path-ext               = "0.1.1"
+path-ext               = "0.1.2"
 pdf-extract            = { git = "https://github.com/toeverything/pdf-extract", branch = "darksky/improve-font-decoding" }
 phf                    = { version = "0.11", features = ["macros"] }
 proptest               = "1.3"

@@ -74,6 +74,8 @@ impl BufferedResampler {
             // interleave
             let out_len = out_blocks[0].len();
             for i in 0..out_len {
+              #[allow(clippy::needless_range_loop)]
+              // apply clippy lint suggestion would regress performance
               for ch in 0..self.channels {
                 interleaved_out.push(out_blocks[ch][i]);
               }

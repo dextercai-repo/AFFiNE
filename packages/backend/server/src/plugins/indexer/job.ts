@@ -42,14 +42,20 @@ export class IndexerJob {
   @OnJob('indexer.indexDoc')
   async indexDoc({ workspaceId, docId }: Jobs['indexer.indexDoc']) {
     // delete the 'indexer.deleteDoc' job from the queue
-    await this.queue.remove(`${workspaceId}/${docId}`, 'indexer.deleteDoc');
+    await this.queue.remove(
+      `deleteDoc/${workspaceId}/${docId}`,
+      'indexer.deleteDoc'
+    );
     await this.service.indexDoc(workspaceId, docId);
   }
 
   @OnJob('indexer.deleteDoc')
   async deleteDoc({ workspaceId, docId }: Jobs['indexer.deleteDoc']) {
     // delete the 'indexer.updateDoc' job from the queue
-    await this.queue.remove(`${workspaceId}/${docId}`, 'indexer.indexDoc');
+    await this.queue.remove(
+      `indexDoc/${workspaceId}/${docId}`,
+      'indexer.indexDoc'
+    );
     await this.service.deleteDoc(workspaceId, docId);
   }
 
@@ -91,8 +97,8 @@ export class IndexerJob {
           docId,
         },
         {
-          jobId: `${workspaceId}/${docId}`,
-          // the delete job should be higher priority than the update job
+          jobId: `deleteDoc/${workspaceId}/${docId}`,
+          // the deleteDoc job should be higher priority than the indexDoc job
           priority: 0,
         }
       );
@@ -105,7 +111,7 @@ export class IndexerJob {
           docId,
         },
         {
-          jobId: `${workspaceId}/${docId}`,
+          jobId: `indexDoc/${workspaceId}/${docId}`,
           priority: 100,
         }
       );
@@ -122,7 +128,10 @@ export class IndexerJob {
 
   @OnJob('indexer.deleteWorkspace')
   async deleteWorkspace({ workspaceId }: Jobs['indexer.deleteWorkspace']) {
-    await this.queue.remove(workspaceId, 'indexer.indexWorkspace');
+    await this.queue.remove(
+      `indexWorkspace/${workspaceId}`,
+      'indexer.indexWorkspace'
+    );
     await this.service.deleteWorkspace(workspaceId);
   }
 
@@ -159,7 +168,7 @@ export class IndexerJob {
       await this.queue.add(
         'indexer.indexWorkspace',
         { workspaceId: workspace.id },
-        { jobId: workspace.id }
+        { jobId: `indexWorkspace/${workspace.id}` }
       );
       addedCount++;
     }
@@ -184,7 +193,7 @@ export class IndexerJob {
       {
         // make sure only one job is running at a time
         delay: 30 * 1000,
-        jobId: 'indexer:auto-index-workspaces',
+        jobId: 'autoIndexWorkspaces',
       }
     );
   }

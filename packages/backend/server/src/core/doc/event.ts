@@ -36,7 +36,7 @@ export class DocEventsListener {
           docId,
         },
         {
-          jobId: `${workspaceId}/${docId}`,
+          jobId: `indexDoc/${workspaceId}/${docId}`,
           priority: 100,
         }
       );
@@ -53,7 +53,7 @@ export class DocEventsListener {
           workspaceId,
         },
         {
-          jobId: workspaceId,
+          jobId: `indexWorkspace/${workspaceId}`,
           priority: 100,
         }
       );
@@ -70,7 +70,7 @@ export class DocEventsListener {
           workspaceId: workspace,
         },
         {
-          jobId: workspace,
+          jobId: `deleteWorkspace/${workspace}`,
           priority: 0,
         }
       );

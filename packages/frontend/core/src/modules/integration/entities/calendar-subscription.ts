@@ -34,7 +34,7 @@ export class CalendarSubscription extends Entity<{ url: string }> {
   );
   name$ = LiveData.computed(get => {
     const config = get(this.config$);
-    if (config?.name) {
+    if (config?.name !== undefined) {
       return config.name;
     }
     const content = get(this.content$);

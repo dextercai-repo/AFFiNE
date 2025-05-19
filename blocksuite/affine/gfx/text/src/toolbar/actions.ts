@@ -127,18 +127,18 @@ export function createTextActions<
         );
         if (!allowed) return null;
 
+        const mappedModels = models.map(mapInto);
+
         const fontFamily =
-          getMostCommonValue(models.map(mapInto), 'fontFamily') ??
-          FontFamily.Inter;
+          getMostCommonValue(mappedModels, 'fontFamily') ?? FontFamily.Inter;
         const styleInfo = { fontFamily: TextUtils.wrapFontFamily(fontFamily) };
 
         const onPick = (fontFamily: FontFamily) => {
           let fontWeight =
-            getMostCommonValue(models.map(mapInto), 'fontWeight') ??
+            getMostCommonValue(mappedModels, 'fontWeight') ??
             FontWeight.Regular;
           let fontStyle =
-            getMostCommonValue(models.map(mapInto), 'fontStyle') ??
-            FontStyle.Normal;
+            getMostCommonValue(mappedModels, 'fontStyle') ?? FontStyle.Normal;
 
           if (!isFontWeightSupported(fontFamily, fontWeight)) {
             fontWeight = FontWeight.Regular;
@@ -199,11 +199,13 @@ export function createTextActions<
             ? DefaultTheme.shapeTextColor
             : DefaultTheme.textColor;
 
+        const mappedModels = models.map(mapInto);
+
         const field = 'color';
-        const firstModel = models[0];
-        const originalColor = mapInto(firstModel)[field];
+        const firstModel = mappedModels[0];
+        const originalColor = firstModel[field];
         const color =
-          getMostCommonResolvedValue(models, field, color =>
+          getMostCommonResolvedValue(mappedModels, field, color =>
             resolveColor(color, theme)
           ) ?? resolveColor(defaultColor, theme);
 

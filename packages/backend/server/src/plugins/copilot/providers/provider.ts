@@ -101,9 +101,10 @@ export abstract class CopilotProvider<C = any> {
     if (ret.success) return;
     const issues = ret.error.issues.map(i => {
       const path =
-        'root' + i.path.length
+        'root' +
+        (i.path.length
           ? `.${i.path.map(seg => (typeof seg === 'number' ? `[${seg}]` : `.${seg}`)).join('')}`
-          : '';
+          : '');
       return `${i.message}${path}`;
     });
     throw new CopilotPromptInvalid(issues.join('; '));

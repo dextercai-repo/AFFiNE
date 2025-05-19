@@ -1,4 +1,4 @@
-import { Loading, toast } from '@affine/component';
+import { Loading, toast, Tooltip } from '@affine/component';
 import { usePageHelper } from '@affine/core/blocksuite/block-suite-page-list/utils';
 import { useAsyncCallback } from '@affine/core/components/hooks/affine-async-hooks';
 import { DocsService } from '@affine/core/modules/doc';
@@ -70,6 +70,7 @@ const CalendarEventRenderer = ({ event }: { event: CalendarEvent }) => {
   const config = useLiveData(
     useMemo(() => subscription?.config$, [subscription?.config$])
   );
+  const name = useLiveData(subscription?.name$);
   const color = config?.color || cssVarV2.button.primary;
 
   const handleClick = useAsyncCallback(async () => {
@@ -116,9 +117,25 @@ const CalendarEventRenderer = ({ event }: { event: CalendarEvent }) => {
       data-all-day={allDay}
       onClick={handleClick}
     >
-      <div className={styles.eventIcon}>
-        {allDay ? <FullDayIcon /> : <PeriodIcon />}
-      </div>
+      <Tooltip
+        align="start"
+        side="top"
+        options={{
+          className: styles.nameTooltip,
+          sideOffset: 12,
+          alignOffset: -4,
+        }}
+        content={
+          <div className={styles.nameTooltipContent}>
+            <div className={styles.nameTooltipIcon} style={{ color }} />
+            <div className={styles.nameTooltipName}>{name}</div>
+          </div>
+        }
+      >
+        <div className={styles.eventIcon}>
+          {allDay ? <FullDayIcon /> : <PeriodIcon />}
+        </div>
+      </Tooltip>
       <div className={styles.eventTitle}>{title}</div>
       {loading ? (
         <Loading />

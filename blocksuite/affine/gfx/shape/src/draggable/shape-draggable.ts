@@ -258,7 +258,7 @@ export class EdgelessToolbarShapeDraggable extends EdgelessToolbarToolMixin(
               console.error('Edgeless toolbar Shape element not found');
               return;
             }
-            const { x, y } = this.gfx.tool.lastMousePos$.peek();
+            const { x, y } = this.gfx.tool.lastMouseViewPos$.peek();
             const { viewport } = this.edgeless.std.get(ViewportElementProvider);
             const { left, top } = viewport;
             const clientPos = { x: x + left, y: y + top };

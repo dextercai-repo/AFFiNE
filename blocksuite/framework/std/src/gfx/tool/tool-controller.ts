@@ -158,6 +158,9 @@ export class ToolController extends GfxExtension {
     y: 0,
   });
 
+  /**
+   * The last mouse position in model coordinates space.
+   */
   readonly lastMousePos$ = computed(() => {
     const [x, y] = this.gfx.viewport.toModelCoord(
       this.lastMouseViewPos$.value.x,

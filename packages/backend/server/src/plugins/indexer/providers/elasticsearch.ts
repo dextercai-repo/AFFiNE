@@ -81,7 +81,9 @@ export class ElasticsearchProvider extends SearchProvider {
     } catch (err) {
       if (
         err instanceof InvalidSearchProviderRequest &&
-        err.data.type === 'resource_already_exists_exception'
+        (err.data.type === 'resource_already_exists_exception' ||
+          (err.data.type === 'invalid_index_name_exception' &&
+            err.data.reason.includes('already exists as alias')))
       ) {
         this.logger.debug(`table ${table} already exists`);
       } else {

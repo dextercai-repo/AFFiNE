@@ -1,6 +1,11 @@
 name: Build Images Edit by DexterCai
 
 on:
+  workflow_dispatch:
+    inputs:
+      flavor:
+        type: string
+        required: true
   workflow_call:
     inputs:
       flavor:

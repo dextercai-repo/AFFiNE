@@ -71,12 +71,15 @@ export class IndexerSyncImpl implements IndexerSync {
 
   state$ = this.status.state$.pipe(
     // throttle the state to 1 second to avoid spamming the UI
-    throttleTime(1000)
+    throttleTime(1000, undefined, {
+      leading: true,
+      trailing: true,
+    })
   );
   docState$(docId: string) {
     return this.status.docState$(docId).pipe(
       // throttle the state to 1 second to avoid spamming the UI
-      throttleTime(1000)
+      throttleTime(1000, undefined, { leading: true, trailing: true })
     );
   }
 

@@ -88,7 +88,7 @@ const useSyncEngineSyncProgress = (meta: WorkspaceMetadata) => {
   const engineState = useLiveData(
     useMemo(() => {
       return workspace
-        ? LiveData.from(workspace.engine.doc.state$, null).throttleTime(500)
+        ? LiveData.from(workspace.engine.doc.state$, null)
         : null;
     }, [workspace])
   );

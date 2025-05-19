@@ -1,5 +1,12 @@
-import type { Observable } from 'rxjs';
-import { combineLatest, map, of, ReplaySubject, share } from 'rxjs';
+import type { Observable, Subscription } from 'rxjs';
+import {
+  combineLatest,
+  map,
+  of,
+  ReplaySubject,
+  share,
+  throttleTime,
+} from 'rxjs';
 
 import type { DocStorage, DocSyncStorage } from '../../storage';
 import { DummyDocStorage } from '../../storage/dummy/doc';
@@ -26,6 +33,7 @@ export interface DocSyncDocState {
 export interface DocSync {
   readonly state$: Observable<DocSyncState>;
   docState$(docId: string): Observable<DocSyncDocState>;
+  waitForSynced(docId?: string, abort?: AbortSignal): Promise<void>;
   addPriority(id: string, priority: number): () => void;
   resetSync(): Promise<void>;
 }
@@ -39,7 +47,9 @@ export class DocSyncImpl implements DocSync {
   );
   private abort: AbortController | null = null;
 
-  state$ = combineLatest(this.peers.map(peer => peer.peerState$)).pipe(
+  private readonly _state$ = combineLatest(
+    this.peers.map(peer => peer.peerState$)
+  ).pipe(
     map(allPeers =>
       allPeers.length === 0
         ? {
@@ -66,6 +76,14 @@ export class DocSyncImpl implements DocSync {
     })
   ) as Observable<DocSyncState>;
 
+  state$ = this._state$.pipe(
+    // throttle the state to 1 second to avoid spamming the UI
+    throttleTime(1000, undefined, {
+      leading: true,
+      trailing: true,
+    })
+  );
+
   constructor(
     readonly storages: PeerStorageOptions<DocStorage>,
     readonly sync: DocSyncStorage
@@ -84,7 +102,7 @@ export class DocSyncImpl implements DocSync {
     );
   }
 
-  docState$(docId: string): Observable<DocSyncDocState> {
+  private _docState$(docId: string): Observable<DocSyncDocState> {
     if (this.peers.length === 0) {
       return of({
         errorMessage: null,
@@ -104,6 +122,62 @@ export class DocSyncImpl implements DocSync {
         };
       })
     );
+  }
+
+  docState$(docId: string): Observable<DocSyncDocState> {
+    return this._docState$(docId).pipe(
+      // throttle the state to 1 second to avoid spamming the UI
+      throttleTime(1000, undefined, {
+        leading: true,
+        trailing: true,
+      })
+    );
+  }
+
+  async waitForSynced(docId?: string, abort?: AbortSignal): Promise<void> {
+    if (!docId) {
+      let sub: Subscription | undefined = undefined;
+      return Promise.race([
+        new Promise<void>(resolve => {
+          sub = this._state$.subscribe(status => {
+            if (status.synced) {
+              resolve();
+            }
+          });
+        }),
+        new Promise<void>((_, reject) => {
+          if (abort?.aborted) {
+            reject(abort?.reason);
+          }
+          abort?.addEventListener('abort', () => {
+            reject(abort.reason);
+          });
+        }),
+      ]).finally(() => {
+        sub?.unsubscribe();
+      });
+    } else {
+      let sub: Subscription | undefined = undefined;
+      return Promise.race([
+        new Promise<void>(resolve => {
+          sub = this._docState$(docId).subscribe(state => {
+            if (state.synced) {
+              resolve();
+            }
+          });
+        }),
+        new Promise<void>((_, reject) => {
+          if (abort?.aborted) {
+            reject(abort?.reason);
+          }
+          abort?.addEventListener('abort', () => {
+            reject(abort.reason);
+          });
+        }),
+      ]).finally(() => {
+        sub?.unsubscribe();
+      });
+    }
   }
 
   start() {

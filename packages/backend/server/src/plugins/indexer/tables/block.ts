@@ -31,7 +31,15 @@ export const blockMapping = {
       analyzer: {
         standard_with_cjk: {
           tokenizer: 'standard',
-          filter: ['lowercase', 'cjk_bigram_and_unigrams'],
+          filter: [
+            'lowercase',
+            'cjk_bigram_and_unigrams',
+            // support `windows designer` => `windows`, `window`, `designer`, `design`
+            // @see https://www.elastic.co/docs/reference/text-analysis/analysis-remove-duplicates-tokenfilter
+            'keyword_repeat',
+            'stemmer',
+            'remove_duplicates',
+          ],
         },
         autocomplete: {
           tokenizer: 'autocomplete_tokenizer',

@@ -24,7 +24,13 @@ export const docMapping = {
       analyzer: {
         standard_with_cjk: {
           tokenizer: 'standard',
-          filter: ['lowercase', 'cjk_bigram_and_unigrams'],
+          filter: [
+            'lowercase',
+            'cjk_bigram_and_unigrams',
+            'keyword_repeat',
+            'stemmer',
+            'remove_duplicates',
+          ],
         },
         autocomplete: {
           tokenizer: 'autocomplete_tokenizer',

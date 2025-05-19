@@ -1210,6 +1210,99 @@ test('should search query match ref_doc_id work', async t => {
   t.snapshot(result.nodes.map(node => pick(node, ['fields'])));
 });
 
+test('should search doc title support stemmer filter', async t => {
+  const docId = 'doc-0';
+  const workspaceId = 'workspace-test-doc-title-stemmer-filter';
+  await searchProvider.write(
+    SearchTable.doc,
+    [
+      {
+        workspace_id: workspaceId,
+        doc_id: docId,
+        title: 'Deploy on Windows by a designer',
+      },
+    ],
+    {
+      refresh: true,
+    }
+  );
+
+  let result = await searchProvider.search(SearchTable.doc, {
+    _source: ['workspace_id', 'doc_id'],
+    query: {
+      bool: {
+        must: [
+          { match: { workspace_id: workspaceId } },
+          { match: { title: 'window' } },
+        ],
+      },
+    },
+    fields: ['doc_id', 'title'],
+    highlight: {
+      fields: {
+        title: {
+          pre_tags: ['<b>'],
+          post_tags: ['</b>'],
+        },
+      },
+    },
+    sort: ['_score'],
+  });
+
+  t.is(result.total, 1);
+  t.snapshot(omit(result.nodes[0], ['_score']));
+
+  result = await searchProvider.search(SearchTable.doc, {
+    _source: ['workspace_id', 'doc_id'],
+    query: {
+      bool: {
+        must: [
+          { match: { workspace_id: workspaceId } },
+          { match: { title: 'windows' } },
+        ],
+      },
+    },
+    fields: ['doc_id', 'title'],
+    highlight: {
+      fields: {
+        title: {
+          pre_tags: ['<b>'],
+          post_tags: ['</b>'],
+        },
+      },
+    },
+    sort: ['_score'],
+  });
+
+  t.is(result.total, 1);
+  t.snapshot(omit(result.nodes[0], ['_score']));
+
+  result = await searchProvider.search(SearchTable.doc, {
+    _source: ['workspace_id', 'doc_id'],
+    query: {
+      bool: {
+        must: [
+          { match: { workspace_id: workspaceId } },
+          { match: { title: 'design' } },
+        ],
+      },
+    },
+    fields: ['doc_id', 'title'],
+    highlight: {
+      fields: {
+        title: {
+          pre_tags: ['<b>'],
+          post_tags: ['</b>'],
+        },
+      },
+    },
+    sort: ['_score'],
+  });
+
+  t.is(result.total, 1);
+  t.snapshot(omit(result.nodes[0], ['_score']));
+});
+
 // #endregion
 
 // #region aggregate

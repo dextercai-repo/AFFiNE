@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { z } from 'zod';
 
 import {
   Config,
@@ -8,17 +9,19 @@ import {
 } from '../../../base';
 import { CopilotProviderFactory } from './factory';
 import {
-  ChatMessageRole,
   type CopilotChatOptions,
   type CopilotEmbeddingOptions,
   type CopilotImageOptions,
   CopilotProviderModel,
   CopilotProviderType,
   CopilotStructuredOptions,
+  EmbeddingMessage,
   ModelCapability,
   ModelConditions,
   ModelFullConditions,
+  ModelInputType,
   type PromptMessage,
+  PromptMessageSchema,
 } from './types';
 
 @Injectable()
@@ -94,6 +97,18 @@ export abstract class CopilotProvider<C = any> {
     );
   }
 
+  private handleZodError(ret: z.SafeParseReturnType<any, any>) {
+    if (ret.success) return;
+    const issues = ret.error.issues.map(i => {
+      const path =
+        'root' + i.path.length
+          ? `.${i.path.map(seg => (typeof seg === 'number' ? `[${seg}]` : `.${seg}`)).join('')}`
+          : '';
+      return `${i.message}${path}`;
+    });
+    throw new CopilotPromptInvalid(issues.join('; '));
+  }
+
   protected async checkParams({
     cond,
     messages,
@@ -105,72 +120,35 @@ export abstract class CopilotProvider<C = any> {
     embeddings?: string[];
     options?: CopilotChatOptions;
   }) {
-    if (!(await this.match(cond))) {
-      throw new CopilotPromptInvalid(
-        `Model not available: ${JSON.stringify(cond)}`
-      );
-    }
-
     const model = this.selectModel(cond);
-    const multimodal = model.capabilities.some(
-      c =>
-        c.input.includes(ModelInputType.Image) ||
-        c.input.includes(ModelInputType.Audio)
+    const multimodal = model.capabilities.some(c =>
+      [ModelInputType.Image, ModelInputType.Audio].some(t =>
+        c.input.includes(t)
+      )
     );
-    const requireContent = options?.requireContent ?? true;
-    const requireAttachment = options?.requireAttachment ?? false;
 
-    if (Array.isArray(messages) && messages.length > 0) {
-      if (
-        messages.some(
-          m =>
-            // check non-object
-            typeof m !== 'object' ||
-            !m ||
-            // check content
-            (requireContent &&
-              (typeof m.content !== 'string' ||
-                !m.content ||
-                !m.content.trim())) ||
-            // check attachment
-            (multimodal &&
-              m.attachments &&
-              (!Array.isArray(m.attachments) ||
-                (!!requireAttachment &&
-                  m.role === 'user' &&
-                  !m.attachments.length)))
-        )
-      ) {
-        throw new CopilotPromptInvalid('Empty message content');
-      }
-      if (
-        messages.some(
-          m =>
-            typeof m.role !== 'string' ||
-            !m.role ||
-            !ChatMessageRole.includes(m.role)
-        )
-      ) {
-        throw new CopilotPromptInvalid('Invalid message role');
-      }
+    if (messages) {
+      const { requireContent = true, requireAttachment = false } = options;
 
-      // json mode need 'json' keyword in content
-      // ref: https://platform.openai.com/docs/api-reference/chat/create#chat-create-response_format
-      if (
-        'jsonMode' in options &&
-        options.jsonMode &&
-        !messages.some(
-          m => m.content && m.content.toLowerCase().includes('json')
+      const MessageSchema = z
+        .array(
+          PromptMessageSchema.extend({
+            content: requireContent
+              ? z.string().trim().min(1)
+              : z.string().optional().nullable(),
+          }).refine(
+            m =>
+              !(multimodal && requireAttachment && m.role === 'user') ||
+              (m.attachments ? m.attachments.length > 0 : true),
+            { message: 'attachments required in multimodal mode' }
+          )
         )
-      ) {
-        throw new CopilotPromptInvalid('Prompt not support json mode');
-      }
+        .optional();
+
+      this.handleZodError(MessageSchema.safeParse(messages));
     }
-    if (
-      Array.isArray(embeddings) &&
-      embeddings.some(e => typeof e !== 'string' || !e || !e.trim())
-    ) {
-      throw new CopilotPromptInvalid('Invalid embedding');
+    if (embeddings) {
+      this.handleZodError(EmbeddingMessage.safeParse(embeddings));
     }
   }
 

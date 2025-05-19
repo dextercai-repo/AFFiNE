@@ -159,6 +159,8 @@ export class IndexerSyncImpl implements IndexerSync {
 
   private async mainLoop(signal?: AbortSignal) {
     if (this.indexer.isReadonly) {
+      this.status.isReadonly = true;
+      this.status.statusUpdatedSubject$.next(true);
       return;
     }
 
@@ -462,6 +464,7 @@ export class IndexerSyncImpl implements IndexerSync {
 }
 
 class IndexerSyncStatus {
+  isReadonly = false;
   prioritySettings = new Map<string, number>();
   jobs = new AsyncPriorityQueue();
   rootDoc = new YDoc({ guid: this.rootDocId });
@@ -474,12 +477,21 @@ class IndexerSyncStatus {
 
   state$ = new Observable<IndexerSyncState>(subscribe => {
     const next = () => {
-      subscribe.next({
-        indexing: this.jobs.length() + (this.currentJob ? 1 : 0),
-        total: this.docsInRootDoc.size + 1,
-        errorMessage: this.errorMessage,
-        completed: this.rootDocReady && this.jobs.length() === 0,
-      });
+      if (this.isReadonly) {
+        subscribe.next({
+          indexing: 0,
+          total: 0,
+          errorMessage: this.errorMessage,
+          completed: true,
+        });
+      } else {
+        subscribe.next({
+          indexing: this.jobs.length() + (this.currentJob ? 1 : 0),
+          total: this.docsInRootDoc.size + 1,
+          errorMessage: this.errorMessage,
+          completed: this.rootDocReady && this.jobs.length() === 0,
+        });
+      }
     };
     next();
     const dispose = this.statusUpdatedSubject$.subscribe(() => {
@@ -497,10 +509,17 @@ class IndexerSyncStatus {
   docState$(docId: string) {
     return new Observable<IndexerDocSyncState>(subscribe => {
       const next = () => {
-        subscribe.next({
-          indexing: this.jobs.has(docId),
-          completed: this.docsInIndexer.has(docId) && !this.jobs.has(docId),
-        });
+        if (this.isReadonly) {
+          subscribe.next({
+            indexing: false,
+            completed: true,
+          });
+        } else {
+          subscribe.next({
+            indexing: this.jobs.has(docId),
+            completed: this.docsInIndexer.has(docId) && !this.jobs.has(docId),
+          });
+        }
       };
       next();
       const dispose = this.statusUpdatedSubject$.subscribe(updatedDocId => {
@@ -555,6 +574,7 @@ class IndexerSyncStatus {
 
   reset() {
     // reset all state, except prioritySettings
+    this.isReadonly = false;
     this.jobs.clear();
     this.docsInRootDoc.clear();
     this.docsInIndexer.clear();

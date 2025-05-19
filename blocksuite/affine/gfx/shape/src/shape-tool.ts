@@ -117,24 +117,24 @@ export class ShapeTool extends BaseTool<ShapeToolOption> {
 
     if (spacePressed && this._spacePressedCtx) {
       const {
-        startX,
-        startY,
         w,
         h,
+        startX,
+        startY,
         endX: pressedX,
         endY: pressedY,
       } = this._spacePressedCtx.draggingArea;
-      const curDraggingArea = controller.draggingViewArea$.peek();
-      const { endX: lastX, endY: lastY } = curDraggingArea;
+      const { endX: lastX, endY: lastY } = controller.draggingArea$.peek();
       const dx = lastX - pressedX;
       const dy = lastY - pressedY;
 
-      this.controller.draggingViewArea$.value = {
-        ...curDraggingArea,
+      this.controller.draggingArea$.value = {
         x: Math.min(startX + dx, lastX),
         y: Math.min(startY + dy, lastY),
         w,
         h,
+        endX: endX + dx,
+        endY: endY + dy,
         startX: startX + dx,
         startY: startY + dy,
       };
@@ -306,7 +306,7 @@ export class ShapeTool extends BaseTool<ShapeToolOption> {
 
         if (spacePressed && this._draggingElementId) {
           this._spacePressedCtx = {
-            draggingArea: this.controller.draggingViewArea$.peek(),
+            draggingArea: this.controller.draggingArea$.peek(),
           };
         }
       })

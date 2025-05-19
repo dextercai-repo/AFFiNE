@@ -102,9 +102,9 @@ export function getInternalViewExtensions() {
     InlinePresetViewExtension,
 
     // Widget
+    // order will affect the z-index of the widget
     DragHandleViewExtension,
     EdgelessAutoConnectViewExtension,
-    EdgelessToolbarViewExtension,
     FrameTitleViewExtension,
     KeyboardToolbarViewExtension,
     LinkedDocViewExtension,
@@ -118,6 +118,7 @@ export function getInternalViewExtensions() {
     EdgelessSelectedRectViewExtension,
     EdgelessDraggingAreaViewExtension,
     NoteSlicerViewExtension,
+    EdgelessToolbarViewExtension,
 
     // Fragment
     DocTitleViewExtension,

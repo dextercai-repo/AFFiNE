@@ -66,7 +66,7 @@ export class DefaultTool extends BaseTool {
 
   private readonly _stopEdgeScrolling = () => {
     if (this._edgeScrollingTimer) {
-      clearTimeout(this._edgeScrollingTimer);
+      clearInterval(this._edgeScrollingTimer);
       this._edgeScrollingTimer = null;
     }
   };

@@ -133,19 +133,11 @@ export class CopilotController implements BeforeApplicationShutdown {
       messageId,
       modelId
     );
-    let provider = await this.provider.getProviderByOutputType(
+    const provider = await this.provider.getProvider(
       ModelOutputType.Text,
       hasAttachment ? ModelInputType.Image : ModelInputType.Text,
       { model }
     );
-    // fallback to text to text if image to text is not available
-    if (!provider && !hasAttachment) {
-      provider = await this.provider.getProviderByOutputType(
-        ModelOutputType.Text,
-        ModelInputType.Text,
-        { model }
-      );
-    }
     if (!provider) {
       throw new NoCopilotProviderAvailable();
     }
@@ -513,7 +505,7 @@ export class CopilotController implements BeforeApplicationShutdown {
         sessionId,
         messageId
       );
-      const provider = await this.provider.getProviderByOutputType(
+      const provider = await this.provider.getProvider(
         ModelOutputType.Image,
         hasAttachment ? ModelInputType.Image : ModelInputType.Text,
         { model }

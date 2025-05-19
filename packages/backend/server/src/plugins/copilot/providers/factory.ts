@@ -1,21 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { ServerFeature, ServerService } from '../../../core';
-import type { AnthropicProvider } from './anthropic';
-import type { FalProvider } from './fal';
-import type { GeminiProvider } from './gemini';
-import type { OpenAIProvider } from './openai';
-import type { PerplexityProvider } from './perplexity';
 import type { CopilotProvider } from './provider';
 import { CopilotProviderType, ModelInputType, ModelOutputType } from './types';
-
-type TypedProvider = {
-  [CopilotProviderType.Anthropic]: AnthropicProvider;
-  [CopilotProviderType.Gemini]: GeminiProvider;
-  [CopilotProviderType.OpenAI]: OpenAIProvider;
-  [CopilotProviderType.Perplexity]: PerplexityProvider;
-  [CopilotProviderType.FAL]: FalProvider;
-};
 
 @Injectable()
 export class CopilotProviderFactory {
@@ -25,11 +12,7 @@ export class CopilotProviderFactory {
 
   readonly #providers = new Map<CopilotProviderType, CopilotProvider>();
 
-  getProvider<P extends CopilotProviderType>(provider: P): TypedProvider[P] {
-    return this.#providers.get(provider) as TypedProvider[P];
-  }
-
-  async getProviderByOutputType(
+  async getProvider(
     outputType: ModelOutputType,
     inputType: ModelInputType = ModelInputType.Text,
     filter: {
@@ -46,22 +29,13 @@ export class CopilotProviderFactory {
         continue;
       }
 
-      if (
-        !filter.model &&
-        (await provider.isModelAvailable({ inputType, outputType }))
-      ) {
-        candidate = provider;
-        this.logger.debug(`Copilot provider candidate found: ${type}`);
-        break;
-      }
+      const isMatched = await provider.match({
+        modelId: filter.model,
+        outputType,
+        inputType,
+      });
 
-      if (
-        await provider.isModelAvailable({
-          modelId: filter.model,
-          outputType,
-          inputType,
-        })
-      ) {
+      if (isMatched) {
         candidate = provider;
         this.logger.debug(`Copilot provider candidate found: ${type}`);
         break;
@@ -85,7 +59,7 @@ export class CopilotProviderFactory {
         continue;
       }
 
-      if (await provider.isModelAvailable({ modelId })) {
+      if (await provider.match({ modelId })) {
         candidate = provider;
         this.logger.debug(`Copilot provider candidate found: ${type}`);
       }

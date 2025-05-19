@@ -757,7 +757,7 @@ test('should be able to get provider', async t => {
   const { factory } = t.context;
 
   {
-    const p = await factory.getProviderByOutputType(ModelOutputType.Text);
+    const p = await factory.getProvider(ModelOutputType.Text);
     t.is(
       p?.type.toString(),
       'openai',
@@ -766,7 +766,7 @@ test('should be able to get provider', async t => {
   }
 
   {
-    const p = await factory.getProviderByOutputType(
+    const p = await factory.getProvider(
       ModelOutputType.Image,
       ModelInputType.Image,
       { model: 'lora/image-to-image' }
@@ -779,7 +779,7 @@ test('should be able to get provider', async t => {
   }
 
   {
-    const p = await factory.getProviderByOutputType(
+    const p = await factory.getProvider(
       ModelOutputType.Image,
       ModelInputType.Image,
       { prefer: CopilotProviderType.FAL }
@@ -794,7 +794,7 @@ test('should be able to get provider', async t => {
   // if a model is not defined and not available in online api
   // it should return null
   {
-    const p = await factory.getProviderByOutputType(
+    const p = await factory.getProvider(
       ModelOutputType.Text,
       ModelInputType.Text,
       { model: 'gpt-4-not-exist' }

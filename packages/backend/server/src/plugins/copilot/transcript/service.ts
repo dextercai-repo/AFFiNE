@@ -159,7 +159,7 @@ export class CopilotTranscriptionService {
     model: string,
     structured: boolean
   ): Promise<CopilotProvider> {
-    let provider = await this.providerFactory.getProviderByOutputType(
+    let provider = await this.providerFactory.getProvider(
       structured ? ModelOutputType.Structured : ModelOutputType.Text,
       ModelInputType.Text,
       { model }

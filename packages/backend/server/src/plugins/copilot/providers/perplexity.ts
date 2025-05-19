@@ -223,7 +223,7 @@ export class PerplexityProvider extends CopilotProvider<PerplexityConfig> {
     embeddings?: string[];
     options?: CopilotChatOptions;
   }) {
-    if (!(await this.isModelAvailable(cond))) {
+    if (!(await this.match(cond))) {
       throw new CopilotPromptInvalid(`Invalid model: ${cond.modelId}`);
     }
   }

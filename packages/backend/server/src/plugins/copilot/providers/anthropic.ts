@@ -83,7 +83,7 @@ export class AnthropicProvider extends CopilotProvider<AnthropicConfig> {
     embeddings?: string[];
     options?: CopilotChatOptions;
   }) {
-    if (!(await this.isModelAvailable(cond))) {
+    if (!(await this.match(cond))) {
       throw new CopilotPromptInvalid(`Invalid model: ${cond.modelId}`);
     }
     if (Array.isArray(messages) && messages.length > 0) {
@@ -155,7 +155,7 @@ export class AnthropicProvider extends CopilotProvider<AnthropicConfig> {
         messages: msgs,
         abortSignal: options.signal,
         providerOptions: {
-          anthropic: this.getAnthropicOptions(options, model),
+          anthropic: this.getAnthropicOptions(options, model.id),
         },
         tools: this.getTools(),
         maxSteps: this.MAX_STEPS,
@@ -189,7 +189,7 @@ export class AnthropicProvider extends CopilotProvider<AnthropicConfig> {
         messages: msgs,
         abortSignal: options.signal,
         providerOptions: {
-          anthropic: this.getAnthropicOptions(options, model),
+          anthropic: this.getAnthropicOptions(options, model.id),
         },
         tools: this.getTools(),
         maxSteps: this.MAX_STEPS,

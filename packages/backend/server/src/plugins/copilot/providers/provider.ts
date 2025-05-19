@@ -17,8 +17,6 @@ import {
   ModelCapability,
   ModelConditions,
   ModelFullConditions,
-  ModelInputType,
-  ModelOutputType,
   type PromptMessage,
 } from './types';
 
@@ -34,40 +32,6 @@ export abstract class CopilotProvider<C = any> {
 
   get config(): C {
     return this.AFFiNEConfig.copilot.providers[this.type] as C;
-  }
-
-  isModelAvailable(
-    conditions: ModelFullConditions = {}
-  ): Promise<boolean> | boolean {
-    const { modelId, outputType, inputType } = conditions;
-    if (!this.configured()) {
-      return false;
-    }
-
-    if (modelId) {
-      const foundModel = this.models.find(m => m.id === modelId);
-      if (!foundModel) {
-        return false;
-      }
-
-      return foundModel.capabilities.some(
-        cap =>
-          (!outputType || cap.output.includes(outputType)) &&
-          (!inputType || cap.input.includes(inputType))
-      );
-    }
-
-    if (outputType) {
-      return this.models.some(model =>
-        model.capabilities.some(
-          cap =>
-            cap.output.includes(outputType) &&
-            (!inputType || cap.input.includes(inputType))
-        )
-      );
-    }
-
-    return false;
   }
 
   @OnEvent('config.init')
@@ -90,104 +54,43 @@ export abstract class CopilotProvider<C = any> {
     }
   }
 
-  getModelsByOutputType(outputType: ModelOutputType): CopilotProviderModel[] {
-    return this.models.filter(model =>
-      model.capabilities.some(cap => cap.output.includes(outputType))
-    );
-  }
-
-  getDefaultModelForOutputType(
-    outputType: ModelOutputType,
-    inputType?: ModelInputType
+  private findValidModel(
+    cond: ModelFullConditions
   ): CopilotProviderModel | undefined {
-    // find the default model that matches both output type and input type
-    if (inputType) {
-      const modelWithInputType = this.models.find(model =>
-        model.capabilities.some(
-          cap =>
-            cap.output.includes(outputType) &&
-            cap.defaultForOutputType === true &&
-            cap.input.includes(inputType)
-        )
+    const { modelId, outputType, inputType } = cond;
+    const matcher = (cap: ModelCapability) =>
+      (!outputType || cap.output.includes(outputType)) &&
+      (!inputType || cap.input.includes(inputType));
+
+    if (modelId) {
+      return this.models.find(
+        m => m.id === modelId && m.capabilities.some(matcher)
       );
-
-      if (modelWithInputType) {
-        return modelWithInputType;
-      }
     }
+    if (!outputType) return undefined;
 
-    // if no input type is specified, find the default model for the outputType
-    const defaultModel = this.models.find(model =>
-      model.capabilities.some(
-        cap =>
-          cap.output.includes(outputType) && cap.defaultForOutputType === true
-      )
+    return this.models.find(m =>
+      m.capabilities.some(c => matcher(c) && c.defaultForOutputType)
     );
-
-    if (defaultModel) {
-      return defaultModel;
-    }
-
-    // if no default model is found, return the first model that supports the outputType
-    // this is a fallback and may not be the intended behavior
-    const firstSupportingModel = this.getModelsByOutputType(outputType)[0];
-    return firstSupportingModel;
   }
 
-  protected validateModelOutputType(
-    model: CopilotProviderModel,
-    outputType?: ModelOutputType,
-    inputType?: ModelInputType
-  ): ModelCapability | undefined {
-    if (!outputType && !inputType) {
-      return model.capabilities[0];
-    }
-
-    const matchingCapability = model.capabilities.find(
-      cap =>
-        (!outputType || cap.output.includes(outputType)) &&
-        (!inputType || cap.input.includes(inputType))
-    );
-
-    if (!matchingCapability) {
-      throw new CopilotPromptInvalid(
-        `Model ${model.id} does not support ${outputType} output type with ${inputType} input type`
-      );
-    }
-
-    return matchingCapability;
+  // make it async to allow dynamic check available models in some providers
+  async match(cond: ModelFullConditions = {}): Promise<boolean> {
+    return this.configured() && !!this.findValidModel(cond);
   }
 
   protected selectModel(cond: ModelFullConditions): CopilotProviderModel {
-    if (cond.modelId) {
-      const model = this.models.find(m => m.id === cond.modelId);
-      if (!model) {
-        throw new CopilotPromptInvalid(
-          `Model ${cond.modelId} not found for provider ${this.type}`
-        );
-      }
+    const model = this.findValidModel(cond);
+    if (model) return model;
 
-      this.validateModelOutputType(model, cond.outputType, cond.inputType);
-      return model;
-    }
-
-    if (!cond.outputType) {
-      throw new CopilotPromptInvalid(
-        `Output type is required when modelId is not provided`
-      );
-    }
-
-    const defaultModel = this.getDefaultModelForOutputType(
-      cond.outputType,
-      cond.inputType
+    const { modelId, outputType, inputType } = cond;
+    throw new CopilotPromptInvalid(
+      modelId
+        ? `Model ${modelId} does not support ${outputType ?? '<any>'} output with ${inputType ?? '<any>'} input`
+        : outputType
+          ? `No model supports ${outputType} output with ${inputType ?? '<any>'} input for provider ${this.type}`
+          : 'Output type is required when modelId is not provided'
     );
-    if (!defaultModel) {
-      throw new CopilotPromptInvalid(
-        `No model found supporting ${cond.outputType} output type with ${cond.inputType} input type for provider ${this.type}`
-      );
-    }
-
-    return defaultModel;
   }
 
   abstract text(

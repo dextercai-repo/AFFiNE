@@ -2097,7 +2097,7 @@
   "error.COPILOT_MESSAGE_NOT_FOUND": "Copilot message {{messageId}} not found.",
   "error.COPILOT_PROMPT_NOT_FOUND": "Copilot prompt {{name}} not found.",
   "error.COPILOT_PROMPT_INVALID": "Copilot prompt is invalid.",
-  "error.COPILOT_PROVIDER_NOT_SUPPORTED": "Copilot provider {{provider}} is not supported output type {{kind}}",
+  "error.COPILOT_PROVIDER_NOT_SUPPORTED": "Copilot provider {{provider}} does not support output type {{kind}}",
   "error.COPILOT_PROVIDER_SIDE_ERROR": "Provider {{provider}} failed with {{kind}} error: {{message}}",
   "error.COPILOT_INVALID_CONTEXT": "Invalid copilot context {{contextId}}.",
   "error.COPILOT_CONTEXT_FILE_NOT_SUPPORTED": "File {{fileName}} is not supported to use as context: {{message}}",

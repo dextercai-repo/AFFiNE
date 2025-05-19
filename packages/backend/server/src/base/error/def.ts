@@ -689,7 +689,7 @@ export const USER_FRIENDLY_ERRORS = {
     type: 'invalid_input',
     args: { provider: 'string', kind: 'string' },
     message: ({ provider, kind }) =>
-      `Copilot provider ${provider} is not supported output type ${kind}`,
+      `Copilot provider ${provider} does not support output type ${kind}`,
   },
   copilot_provider_side_error: {
     type: 'internal_server_error',

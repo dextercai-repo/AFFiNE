@@ -1,9 +1,7 @@
-import { DatePicker, Menu, PropertyValue, Tooltip } from '@affine/component';
+import { DatePicker, Menu, PropertyValue } from '@affine/component';
 import type { FilterParams } from '@affine/core/modules/collection-rules';
-import { DocService } from '@affine/core/modules/doc';
 import { i18nTime, useI18n } from '@affine/i18n';
 import { DateTimeIcon } from '@blocksuite/icons/rc';
-import { useLiveData, useServices } from '@toeverything/infra';
 import { cssVarV2 } from '@toeverything/theme/v2';
 import { useCallback } from 'react';
 
@@ -65,53 +63,6 @@ export const DateValue = ({
     </Menu>
   );
 };
-
-const toRelativeDate = (time: string | number) => {
-  return i18nTime(time, {
-    relative: {
-      max: [1, 'day'],
-    },
-    absolute: {
-      accuracy: 'day',
-    },
-  });
-};
-
-const MetaDateValueFactory = ({
-  type,
-}: {
-  type: 'createDate' | 'updatedDate';
-}) =>
-  function ReadonlyDateValue() {
-    const { docService } = useServices({
-      DocService,
-    });
-
-    const docMeta = useLiveData(docService.doc.meta$);
-    const value = docMeta?.[type];
-
-    const relativeDate = value ? toRelativeDate(value) : null;
-    const date = value ? i18nTime(value) : null;
-
-    return (
-      <Tooltip content={date} side="top" align="end">
-        <PropertyValue
-          className={relativeDate ? '' : styles.empty}
-          isEmpty={!relativeDate}
-        >
-          {relativeDate}
-        </PropertyValue>
-      </Tooltip>
-    );
-  };
-
-export const CreateDateValue = MetaDateValueFactory({
-  type: 'createDate',
-});
-
-export const UpdatedDateValue = MetaDateValueFactory({
-  type: 'updatedDate',
-});
 
 export const DateFilterValue = ({
   filter,
@@ -199,50 +150,6 @@ export const DateDocListProperty = ({ value }: DocListPropertyProps) => {
   );
 };
 
-export const CreateDateDocListProperty = ({ doc }: DocListPropertyProps) => {
-  const t = useI18n();
-  const docMeta = useLiveData(doc.meta$);
-  const createDate = docMeta?.createDate;
-
-  if (!createDate) return null;
-
-  return (
-    <Tooltip
-      content={
-        <span className={styles.tooltip}>
-          {t.t('created at', { time: i18nTime(createDate) })}
-        </span>
-      }
-    >
-      <div className={styles.dateDocListInlineProperty}>
-        {i18nTime(createDate, { relative: true })}
-      </div>
-    </Tooltip>
-  );
-};
-
-export const UpdatedDateDocListProperty = ({ doc }: DocListPropertyProps) => {
-  const t = useI18n();
-  const docMeta = useLiveData(doc.meta$);
-  const updatedDate = docMeta?.updatedDate;
-
-  if (!updatedDate) return null;
-
-  return (
-    <Tooltip
-      content={
-        <span className={styles.tooltip}>
-          {t.t('updated at', { time: i18nTime(updatedDate) })}
-        </span>
-      }
-    >
-      <div className={styles.dateDocListInlineProperty}>
-        {i18nTime(updatedDate, { relative: true })}
-      </div>
-    </Tooltip>
-  );
-};
-
 export const DateGroupHeader = ({ groupId, docCount }: GroupHeaderProps) => {
   const date = groupId || 'No Date';
 
@@ -251,8 +158,4 @@ export const DateGroupHeader = ({ groupId, docCount }: GroupHeaderProps) => {
       {date}
     </PlainTextDocGroupHeader>
   );
-};
-
-export const CreatedGroupHeader = (props: GroupHeaderProps) => {
-  return <PlainTextDocGroupHeader {...props} />;
 };

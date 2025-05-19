@@ -1,6 +1,6 @@
 import { PropertyValue } from '@affine/component';
 import type { FilterParams } from '@affine/core/modules/collection-rules';
-import { DocService } from '@affine/core/modules/doc';
+import { type DocRecord, DocService } from '@affine/core/modules/doc';
 import { type Tag, TagService } from '@affine/core/modules/tag';
 import { WorkspaceService } from '@affine/core/modules/workspace';
 import { useI18n } from '@affine/i18n';
@@ -11,7 +11,7 @@ import { useCallback, useMemo } from 'react';
 
 import { PlainTextDocGroupHeader } from '../explorer/docs-view/group-header';
 import { StackProperty } from '../explorer/docs-view/stack-property';
-import type { DocListPropertyProps, GroupHeaderProps } from '../explorer/types';
+import type { GroupHeaderProps } from '../explorer/types';
 import { useNavigateHelper } from '../hooks/use-navigate-helper';
 import type { PropertyValueProps } from '../properties/types';
 import {
@@ -185,7 +185,7 @@ const TagIcon = ({ tag, size = 8 }: { tag: Tag; size?: number }) => {
     />
   );
 };
-export const TagsDocListProperty = ({ doc }: DocListPropertyProps) => {
+export const TagsDocListProperty = ({ doc }: { doc: DocRecord }) => {
   const tagList = useService(TagService).tagList;
   const tags = useLiveData(tagList.tagsByPageId$(doc.id));
 

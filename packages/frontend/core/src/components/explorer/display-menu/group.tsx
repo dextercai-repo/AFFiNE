@@ -5,6 +5,7 @@ import { useI18n } from '@affine/i18n';
 import { DoneIcon } from '@blocksuite/icons/rc';
 import { useLiveData, useService } from '@toeverything/infra';
 import { cssVarV2 } from '@toeverything/theme/v2';
+import { useMemo } from 'react';
 
 import { WorkspacePropertyName } from '../../properties';
 import {
@@ -15,6 +16,7 @@ import {
   isSupportedWorkspacePropertyType,
   WorkspacePropertyTypes,
 } from '../../workspace-property-types';
+import { generateExplorerPropertyList } from '../properties';
 
 const PropertyGroupByName = ({ groupBy }: { groupBy: GroupByParams }) => {
   const workspacePropertyService = useService(WorkspacePropertyService);
@@ -49,37 +51,89 @@ export const GroupByList = ({
   onChange?: (next: GroupByParams) => void;
 }) => {
   const workspacePropertyService = useService(WorkspacePropertyService);
-  const propertyList = useLiveData(workspacePropertyService.properties$);
+  const propertyList = useLiveData(workspacePropertyService.sortedProperties$);
+  const explorerPropertyList = useMemo(() => {
+    return generateExplorerPropertyList(propertyList);
+  }, [propertyList]);
 
   return (
     <>
-      {propertyList.map(v => {
-        const allowInGroupBy = isSupportedWorkspacePropertyType(v.type)
-          ? WorkspacePropertyTypes[v.type].allowInGroupBy
-          : false;
-        if (!allowInGroupBy) {
-          return null;
-        }
-        return (
-          <MenuItem
-            key={v.id}
-            onClick={e => {
-              e.preventDefault();
-              onChange?.({
-                type: 'property',
-                key: v.id,
-              });
-            }}
-            suffixIcon={
-              groupBy?.type === 'property' && groupBy?.key === v.id ? (
-                <DoneIcon style={{ color: cssVarV2('icon/activated') }} />
-              ) : null
-            }
-          >
-            <WorkspacePropertyName propertyInfo={v} />
-          </MenuItem>
-        );
-      })}
+      {explorerPropertyList.map(property => (
+        <GroupByListItem
+          key={property.systemProperty?.type ?? property.workspaceProperty?.id}
+          property={property}
+          groupBy={groupBy}
+          onChange={onChange}
+        />
+      ))}
     </>
+  );
+};
+
+const GroupByListItem = ({
+  property,
+  groupBy,
+  onChange,
+}: {
+  property: ReturnType<typeof generateExplorerPropertyList>[number];
+  groupBy?: GroupByParams;
+  onChange?: (next: GroupByParams) => void;
+}) => {
+  const t = useI18n();
+  const { systemProperty, workspaceProperty } = property;
+
+  const allowInGroupBy = systemProperty
+    ? 'allowInGroupBy' in systemProperty && systemProperty.allowInGroupBy
+    : workspaceProperty
+      ? isSupportedWorkspacePropertyType(workspaceProperty.type) &&
+        WorkspacePropertyTypes[workspaceProperty.type].allowInGroupBy
+      : false;
+
+  if (!allowInGroupBy) {
+    return null;
+  }
+
+  const active =
+    (systemProperty &&
+      groupBy?.type === 'system' &&
+      groupBy?.key === systemProperty.type) ||
+    (workspaceProperty &&
+      groupBy?.type === 'property' &&
+      groupBy?.key === workspaceProperty.id);
+
+  const value = systemProperty
+    ? {
+        type: 'system',
+        key: systemProperty.type,
+      }
+    : workspaceProperty
+      ? {
+          type: 'property',
+          key: workspaceProperty.id,
+        }
+      : null;
+
+  const name = workspaceProperty ? (
+    <WorkspacePropertyName propertyInfo={workspaceProperty} />
+  ) : systemProperty ? (
+    t.t(systemProperty.name)
+  ) : null;
+
+  return (
+    <MenuItem
+      onClick={e => {
+        e.preventDefault();
+        if (value) {
+          onChange?.(value);
+        }
+      }}
+      suffixIcon={
+        active ? (
+          <DoneIcon style={{ color: cssVarV2('icon/activated') }} />
+        ) : null
+      }
+    >
+      {name}
+    </MenuItem>
   );
 };

@@ -29,6 +29,16 @@ import {
   CheckboxValue,
 } from './checkbox';
 import {
+  CreateAtDocListProperty,
+  CreateAtValue,
+  CreatedAtFilterValue,
+  CreatedAtGroupHeader,
+  UpdatedAtDocListProperty,
+  UpdatedAtFilterValue,
+  UpdatedAtGroupHeader,
+  UpdatedAtValue,
+} from './created-updated-at';
+import {
   CreatedByDocListInlineProperty,
   CreatedByUpdatedByFilterValue,
   CreatedByValue,
@@ -37,15 +47,10 @@ import {
   UpdatedByValue,
 } from './created-updated-by';
 import {
-  CreateDateDocListProperty,
-  CreateDateValue,
-  CreatedGroupHeader,
   DateDocListProperty,
   DateFilterValue,
   DateGroupHeader,
   DateValue,
-  UpdatedDateDocListProperty,
-  UpdatedDateValue,
 } from './date';
 import {
   DocPrimaryModeDocListProperty,
@@ -79,7 +84,7 @@ import {
   TextValue,
 } from './text';
 
-const DateFilterMethod = {
+export const DateFilterMethod = {
   after: 'com.affine.filter.after',
   before: 'com.affine.filter.before',
   between: 'com.affine.filter.between',
@@ -213,7 +218,7 @@ export const WorkspacePropertyTypes = {
   },
   updatedAt: {
     icon: DateTimeIcon,
-    value: UpdatedDateValue,
+    value: UpdatedAtValue,
     name: 'com.affine.page-properties.property.updatedAt',
     description: 'com.affine.page-properties.property.updatedAt.tooltips',
     renameable: false,
@@ -222,15 +227,15 @@ export const WorkspacePropertyTypes = {
     filterMethod: {
       ...DateFilterMethod,
     },
-    filterValue: DateFilterValue,
+    filterValue: UpdatedAtFilterValue,
     defaultFilter: { method: 'this-week' },
     showInDocList: 'inline',
-    docListProperty: UpdatedDateDocListProperty,
-    groupHeader: CreatedGroupHeader,
+    docListProperty: UpdatedAtDocListProperty,
+    groupHeader: UpdatedAtGroupHeader,
   },
   createdAt: {
     icon: HistoryIcon,
-    value: CreateDateValue,
+    value: CreateAtValue,
     name: 'com.affine.page-properties.property.createdAt',
     description: 'com.affine.page-properties.property.createdAt.tooltips',
     renameable: false,
@@ -239,11 +244,11 @@ export const WorkspacePropertyTypes = {
     filterMethod: {
       ...DateFilterMethod,
     },
-    filterValue: DateFilterValue,
+    filterValue: CreatedAtFilterValue,
     defaultFilter: { method: 'this-week' },
     showInDocList: 'inline',
-    docListProperty: CreateDateDocListProperty,
-    groupHeader: CreatedGroupHeader,
+    docListProperty: CreateAtDocListProperty,
+    groupHeader: CreatedAtGroupHeader,
   },
   docPrimaryMode: {
     icon: FileIcon,

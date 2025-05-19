@@ -7,6 +7,7 @@ import { cssVarV2 } from '@toeverything/theme/v2';
 import { memo, useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { ListFloatingToolbar } from '../../page-list/components/list-floating-toolbar';
+import { SystemPropertyTypes } from '../../system-property-types';
 import { WorkspacePropertyTypes } from '../../workspace-property-types';
 import { DocExplorerContext } from '../context';
 import { DocListItem } from './doc-list-item';
@@ -30,7 +31,19 @@ const GroupHeader = memo(function GroupHeader({
   const groupKey = groupBy?.key;
 
   const header = useMemo(() => {
-    if (groupType === 'property') {
+    if (groupType === 'system') {
+      const property = groupKey && SystemPropertyTypes[groupKey];
+      if (!property) return null;
+      const GroupHeader = property.groupHeader;
+      if (!GroupHeader) return null;
+      return (
+        <GroupHeader
+          groupId={groupId}
+          docCount={itemCount}
+          collapsed={!!collapsed}
+        />
+      );
+    } else if (groupType === 'property') {
       const property = allProperties.find(p => p.id === groupKey);
       if (!property) return null;
 

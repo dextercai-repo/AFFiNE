@@ -9,7 +9,7 @@ import { cssVarV2 } from '@toeverything/theme/v2';
 import { type ReactNode, useCallback, useMemo } from 'react';
 
 import { PlainTextDocGroupHeader } from '../explorer/docs-view/group-header';
-import type { DocListPropertyProps, GroupHeaderProps } from '../explorer/types';
+import type { GroupHeaderProps } from '../explorer/types';
 import { MemberSelectorInline } from '../member-selector';
 import * as styles from './created-updated-by.css';
 
@@ -135,9 +135,7 @@ export const CreatedByUpdatedByFilterValue = ({
   );
 };
 
-export const CreatedByDocListInlineProperty = ({
-  doc,
-}: DocListPropertyProps) => {
+export const CreatedByDocListInlineProperty = ({ doc }: { doc: DocRecord }) => {
   return (
     <CreatedByUpdatedByAvatar
       doc={doc}
@@ -149,9 +147,7 @@ export const CreatedByDocListInlineProperty = ({
   );
 };
 
-export const UpdatedByDocListInlineProperty = ({
-  doc,
-}: DocListPropertyProps) => {
+export const UpdatedByDocListInlineProperty = ({ doc }: { doc: DocRecord }) => {
   return (
     <CreatedByUpdatedByAvatar
       type="UpdatedBy"

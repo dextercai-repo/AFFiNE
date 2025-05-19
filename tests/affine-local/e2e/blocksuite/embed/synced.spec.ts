@@ -88,11 +88,11 @@ test.describe('edgeless', () => {
       const content = embedBlock.locator('editor-host');
 
       await expect(foldButton).toHaveAttribute('data-folded', 'false');
-      await expect(content).toBeVisible();
+      await expect(content).toBeInViewport();
 
       await foldButton.click();
 
-      await expect(content).toBeHidden();
+      await expect(content).not.toBeInViewport();
       await expect(foldButton).toHaveAttribute('data-folded', 'true');
     });
 
@@ -123,11 +123,11 @@ test.describe('edgeless', () => {
       const content = embedBlock.locator('editor-host');
 
       await expect(foldButton).toHaveAttribute('data-folded', 'true');
-      await expect(content).toBeHidden();
+      await expect(content).not.toBeInViewport();
 
       await foldButton.click();
       await expect(foldButton).toHaveAttribute('data-folded', 'false');
-      await expect(content).toBeVisible();
+      await expect(content).toBeInViewport();
 
       await embedBlock.click();
       const [, , , h2] = await getSelectedXYWH(page);
@@ -149,20 +149,20 @@ test.describe('edgeless', () => {
       await foldButton.click();
 
       await resizeElementByHandle(page, [50, 0], 'bottom-right');
-      await expect(content).toBeHidden();
+      await expect(content).not.toBeInViewport();
       await expect(foldButton).toHaveAttribute('data-folded', 'true');
 
       await resizeElementByHandle(page, [-50, 0], 'bottom-right');
-      await expect(content).toBeHidden();
+      await expect(content).not.toBeInViewport();
       await expect(foldButton).toHaveAttribute('data-folded', 'true');
 
       await resizeElementByHandle(page, [0, 50], 'bottom-right');
       await expect(
         content,
         'should unfold the embed synced doc when adjust height to greater'
-      ).toBeVisible();
+      ).toBeInViewport();
       await expect(foldButton).toHaveAttribute('data-folded', 'false');
-      await expect(content).toBeVisible();
+      await expect(content).toBeInViewport();
     });
   });
 });

@@ -7,6 +7,9 @@ import { BaseModel } from './base';
 
 declare global {
   interface Events {
+    'workspace.updated': {
+      id: string;
+    } & UpdateWorkspaceInput;
     'workspace.deleted': {
       id: string;
     };
@@ -59,12 +62,11 @@ export class WorkspaceModel extends BaseModel {
       `Updated workspace ${workspaceId} with data ${JSON.stringify(data)}`
     );
 
-    if (workspace.enableDocEmbedding) {
-      // trigger workspace embedding
-      this.event.emit('workspace.embedding', {
-        workspaceId: workspace.id,
-      });
-    }
+    this.event.emit('workspace.updated', {
+      id: workspace.id,
+      ...data,
+    });
+
     return workspace;
   }
 

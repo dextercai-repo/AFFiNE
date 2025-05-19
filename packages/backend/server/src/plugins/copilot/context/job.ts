@@ -88,6 +88,19 @@ export class CopilotContextDocJob {
     }
   }
 
+  @OnEvent('workspace.updated')
+  async onWorkspaceConfigUpdate({
+    id,
+    enableDocEmbedding,
+  }: Events['workspace.updated']) {
+    if (enableDocEmbedding) {
+      // trigger workspace embedding
+      this.event.emit('workspace.embedding', {
+        workspaceId: id,
+      });
+    }
+  }
+
   @OnEvent('workspace.embedding')
   async addWorkspaceEmbeddingQueue({
     workspaceId,

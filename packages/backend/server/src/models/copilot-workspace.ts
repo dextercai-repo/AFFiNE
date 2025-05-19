@@ -34,25 +34,6 @@ export class CopilotWorkspaceConfigModel extends BaseModel {
     });
   }
 
-  @Transactional()
-  private async listEmbeddedDocIds(
-    workspaceId: string,
-    options?: PaginationInput
-  ) {
-    return await this.db.aiWorkspaceEmbedding.findMany({
-      where: {
-        workspaceId,
-      },
-      select: {
-        docId: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-      skip: options?.offset,
-      take: options?.first,
-    });
-  }
-
   /**
    * find docs to embed, excluding ignored and already embedded docs
    * newer docs will be list first
@@ -63,15 +44,19 @@ export class CopilotWorkspaceConfigModel extends BaseModel {
   async findDocsToEmbed(workspaceId: string): Promise<string[]> {
     const docIds = await this.db.snapshot
       .findMany({
-        where: { workspaceId },
+        where: {
+          workspaceId,
+          embedding: {
+            is: null,
+          },
+        },
         select: { id: true },
       })
       .then(r => r.map(doc => doc.id));
 
-    const skipDocIds = await Promise.all([
-      this.models.copilotWorkspace.listEmbeddedDocIds(workspaceId),
-      this.models.copilotWorkspace.listIgnoredDocIds(workspaceId),
-    ]).then(r => new Set(r.flat().map(r => r.docId)));
+    const skipDocIds = await this.listIgnoredDocIds(workspaceId).then(
+      r => new Set(r.map(r => r.docId))
+    );
 
     return docIds.filter(id => !skipDocIds.has(id));
   }

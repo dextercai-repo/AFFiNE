@@ -7,9 +7,7 @@ import { BaseModel } from './base';
 
 declare global {
   interface Events {
-    'workspace.updated': {
-      id: string;
-    } & UpdateWorkspaceInput;
+    'workspace.updated': Workspace;
     'workspace.deleted': {
       id: string;
     };
@@ -62,10 +60,7 @@ export class WorkspaceModel extends BaseModel {
       `Updated workspace ${workspaceId} with data ${JSON.stringify(data)}`
     );
 
-    this.event.emit('workspace.updated', {
-      id: workspace.id,
-      ...data,
-    });
+    this.event.emit('workspace.updated', workspace);
 
     return workspace;
   }

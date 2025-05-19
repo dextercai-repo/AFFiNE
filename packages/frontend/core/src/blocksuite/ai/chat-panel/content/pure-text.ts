@@ -8,7 +8,7 @@ export class ChatContentPureText extends ShadowlessElement {
     .chat-content-pure-text {
       display: inline-block;
       text-align: left;
-      max-width: 800px;
+      max-width: 100%;
       max-height: 500px;
       overflow-y: auto;
       overflow-x: hidden;

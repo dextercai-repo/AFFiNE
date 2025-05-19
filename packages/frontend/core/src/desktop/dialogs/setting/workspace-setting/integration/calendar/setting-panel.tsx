@@ -55,9 +55,20 @@ const AddSubscription = () => {
   }, []);
 
   const handleAddSub = useCallback(() => {
+    const _url = url.trim();
+    const exists = calendar.getSubscription(_url);
+    if (exists) {
+      notify.error({
+        title: t['com.affine.integration.calendar.new-duplicate-error-title'](),
+        message:
+          t['com.affine.integration.calendar.new-duplicate-error-content'](),
+      });
+      return;
+    }
+
     setVerifying(true);
     calendar
-      .createSubscription(url)
+      .createSubscription(_url)
       .then(() => {
         setOpen(false);
         setUrl('');

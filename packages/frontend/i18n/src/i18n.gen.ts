@@ -7887,6 +7887,14 @@ export function useAFFiNEI18N(): {
       */
     ["com.affine.integration.calendar.new-url-label"](): string;
     /**
+      * `This is a duplicate calendar`
+      */
+    ["com.affine.integration.calendar.new-duplicate-error-title"](): string;
+    /**
+      * `This subscription calendar already exists in the account of subscribed calendars.`
+      */
+    ["com.affine.integration.calendar.new-duplicate-error-content"](): string;
+    /**
       * `An error occurred while adding the calendar`
       */
     ["com.affine.integration.calendar.new-error"](): string;

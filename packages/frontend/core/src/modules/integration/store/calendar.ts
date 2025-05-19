@@ -99,6 +99,10 @@ export class CalendarStore extends Store {
     );
   }
 
+  getSubscription(url: string) {
+    return this.getSubscriptionMap()[url];
+  }
+
   watchSubscriptionCache(url: string) {
     return this.cacheStorage.watch<string>(this.getCacheKey(url));
   }

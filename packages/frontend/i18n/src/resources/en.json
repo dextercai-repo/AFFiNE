@@ -1974,6 +1974,8 @@
   "com.affine.integration.calendar.unsubscribe": "Unsubscribe",
   "com.affine.integration.calendar.new-title": "Add a calendar by URL",
   "com.affine.integration.calendar.new-url-label": "Calendar URL",
+  "com.affine.integration.calendar.new-duplicate-error-title": "This is a duplicate calendar",
+  "com.affine.integration.calendar.new-duplicate-error-content": "This subscription calendar already exists in the account of subscribed calendars.",
   "com.affine.integration.calendar.new-error": "An error occurred while adding the calendar",
   "com.affine.integration.calendar.all-day": "All day",
   "com.affine.integration.calendar.new-doc": "New doc",

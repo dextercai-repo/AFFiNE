@@ -5,6 +5,7 @@ import {
   getAllWorkspaceEmbeddingIgnoredDocsQuery,
   getWorkspaceConfigQuery,
   getWorkspaceEmbeddingFilesQuery,
+  getWorkspaceEmbeddingStatusQuery,
   type PaginationInput,
   removeWorkspaceEmbeddingFilesMutation,
   removeWorkspaceEmbeddingIgnoredDocsMutation,
@@ -174,5 +175,20 @@ export class EmbeddingStore extends Store {
       context: { signal },
     });
     return data.workspace.embedding.files;
+  }
+
+  async getEmbeddingProgress(workspaceId: string, signal?: AbortSignal) {
+    if (!this.workspaceServerService.server) {
+      throw new Error('No Server');
+    }
+
+    const data = await this.workspaceServerService.server.gql({
+      query: getWorkspaceEmbeddingStatusQuery,
+      variables: {
+        workspaceId,
+      },
+      context: { signal },
+    });
+    return data.queryWorkspaceEmbeddingStatus;
   }
 }

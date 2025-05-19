@@ -8,10 +8,11 @@ import { WorkspaceDialogService } from '@affine/core/modules/dialogs';
 import { useI18n } from '@affine/i18n';
 import { useLiveData, useService } from '@toeverything/infra';
 import type React from 'react';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import { EmbeddingService } from '../services/embedding';
 import { Attachments } from './attachments';
+import EmbeddingProgress from './embedding-progress';
 import { IgnoredDocs } from './ignored-docs';
 
 interface EmbeddingSettingsProps {}
@@ -22,6 +23,10 @@ export const EmbeddingSettings: React.FC<EmbeddingSettingsProps> = () => {
   const embeddingEnabled = useLiveData(embeddingService.embedding.enabled$);
   const attachments = useLiveData(embeddingService.embedding.attachments$);
   const ignoredDocs = useLiveData(embeddingService.embedding.ignoredDocs$);
+  const embeddingProgress = useLiveData(
+    embeddingService.embedding.embeddingProgress$
+  );
+
   const isIgnoredDocsLoading = useLiveData(
     embeddingService.embedding.isIgnoredDocsLoading$
   );
@@ -33,7 +38,6 @@ export const EmbeddingSettings: React.FC<EmbeddingSettingsProps> = () => {
     [attachments]
   );
   const ignoredDocNodes = ignoredDocs;
-
   const workspaceDialogService = useService(WorkspaceDialogService);
 
   const handleEmbeddingToggle = useCallback(
@@ -93,6 +97,13 @@ export const EmbeddingSettings: React.FC<EmbeddingSettingsProps> = () => {
     embeddingService.embedding,
   ]);
 
+  useEffect(() => {
+    embeddingService.embedding.startEmbeddingProgressPolling();
+    return () => {
+      embeddingService.embedding.stopEmbeddingProgressPolling();
+    };
+  }, [embeddingService.embedding]);
+
   return (
     <SettingWrapper
       title={t[
@@ -120,6 +131,15 @@ export const EmbeddingSettings: React.FC<EmbeddingSettingsProps> = () => {
           onChange={handleEmbeddingToggle}
         />
       </SettingRow>
+
+      <SettingRow
+        name={t[
+          'com.affine.settings.workspace.indexer-embedding.embedding.progress.title'
+        ]()}
+        style={{ marginBottom: '0px' }}
+      />
+
+      <EmbeddingProgress status={embeddingProgress} />
 
       <SettingRow
         name={t[

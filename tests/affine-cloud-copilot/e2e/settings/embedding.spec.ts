@@ -43,6 +43,24 @@ test.describe('AISettings/Embedding', () => {
     await utils.settings.waitForWorkspaceEmbeddingSwitchToBe(page, true);
   });
 
+  test('should show embedding progress', async ({
+    loggedInPage: page,
+    utils,
+  }) => {
+    await utils.settings.enableWorkspaceEmbedding(page);
+    await page.getByTestId('embedding-progress-wrapper');
+
+    const progress = await page.getByTestId('embedding-progress');
+    // wait for the progress to be loading
+    const title = await page.getByTestId('embedding-progress-title');
+    await expect(title).toHaveText(/Loading sync status/i);
+    await expect(progress).not.toBeVisible();
+
+    const count = await page.getByTestId('embedding-progress-count');
+    await expect(count).toHaveText(/\d+\/\d+/);
+    await expect(progress).toBeVisible();
+  });
+
   test('should allow manual attachment upload for embedding', async ({
     loggedInPage: page,
     utils,

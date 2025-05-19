@@ -98,3 +98,22 @@ export const docItemInfo = css({
   gap: '12px',
   alignItems: 'center',
 });
+
+export const embeddingProgress = css({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  width: '100%',
+  paddingBottom: '16px',
+  fontSize: '14px',
+  fontWeight: 400,
+  color: cssVar('textSecondaryColor'),
+});
+
+export const embeddingProgressTitle = css({
+  textAlign: 'left',
+  width: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+});

@@ -11,8 +11,14 @@ import {
   onStart,
   smartRetry,
 } from '@toeverything/infra';
-import { EMPTY } from 'rxjs';
-import { concatMap, exhaustMap, mergeMap } from 'rxjs/operators';
+import { EMPTY, interval, Subject } from 'rxjs';
+import {
+  concatMap,
+  exhaustMap,
+  mergeMap,
+  switchMap,
+  takeUntil,
+} from 'rxjs/operators';
 
 import { COUNT_PER_PAGE } from '../constants';
 import type { EmbeddingStore } from '../stores/embedding';
@@ -35,6 +41,11 @@ interface Attachments {
 
 type IgnoredDocs = IgnoredDoc[];
 
+interface EmbeddingProgress {
+  embedded: number;
+  total: number;
+}
+
 export class Embedding extends Entity {
   enabled$ = new LiveData<boolean>(false);
   error$ = new LiveData<any>(null);
@@ -50,6 +61,11 @@ export class Embedding extends Entity {
   isEnabledLoading$ = new LiveData(false);
   isAttachmentsLoading$ = new LiveData(false);
   isIgnoredDocsLoading$ = new LiveData(false);
+  embeddingProgress$ = new LiveData<EmbeddingProgress | null>(null);
+  isEmbeddingProgressLoading$ = new LiveData(false);
+
+  private readonly EMBEDDING_PROGRESS_POLL_INTERVAL = 3000;
+  private readonly stopEmbeddingProgress$ = new Subject<void>();
 
   constructor(
     private readonly workspaceService: WorkspaceService,
@@ -59,6 +75,7 @@ export class Embedding extends Entity {
     this.getEnabled();
     this.getAttachments({ first: COUNT_PER_PAGE, after: null });
     this.getIgnoredDocs();
+    this.getEmbeddingProgress();
   }
 
   getEnabled = effect(
@@ -228,7 +245,49 @@ export class Embedding extends Entity {
     })
   );
 
+  startEmbeddingProgressPolling() {
+    this.getEmbeddingProgress();
+  }
+
+  stopEmbeddingProgressPolling() {
+    this.stopEmbeddingProgress$.next();
+  }
+
+  getEmbeddingProgress = effect(
+    exhaustMap(() => {
+      return interval(this.EMBEDDING_PROGRESS_POLL_INTERVAL).pipe(
+        takeUntil(this.stopEmbeddingProgress$),
+        switchMap(() =>
+          fromPromise(signal =>
+            this.store.getEmbeddingProgress(
+              this.workspaceService.workspace.id,
+              signal
+            )
+          ).pipe(
+            smartRetry(),
+            mergeMap(value => {
+              this.embeddingProgress$.next(value);
+              if (value && value.embedded === value.total && value.total > 0) {
+                this.stopEmbeddingProgressPolling();
+              }
+              return EMPTY;
+            }),
+            catchErrorInto(this.error$, error => {
+              logger.error(
+                'Failed to fetch workspace embedding progress',
+                error
+              );
+            }),
+            onStart(() => this.isEmbeddingProgressLoading$.setValue(true)),
+            onComplete(() => this.isEmbeddingProgressLoading$.setValue(false))
+          )
+        )
+      );
+    })
+  );
+
   override dispose(): void {
+    console.log('dispose');
     this.getEnabled.unsubscribe();
     this.getAttachments.unsubscribe();
     this.getIgnoredDocs.unsubscribe();
@@ -236,5 +295,7 @@ export class Embedding extends Entity {
     this.addAttachments.unsubscribe();
     this.removeAttachment.unsubscribe();
     this.setEnabled.unsubscribe();
+    this.stopEmbeddingProgress$.next();
+    this.getEmbeddingProgress.unsubscribe();
   }
 }
